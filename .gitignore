@@ -1,0 +1,4 @@
+node_modules
+dist
+public/pdf.worker.min.js
+*.local

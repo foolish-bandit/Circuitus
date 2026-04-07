@@ -1,0 +1,109 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body, #root {
+    @apply h-full m-0 p-0;
+  }
+
+  body {
+    @apply bg-cream font-sans text-text-main antialiased;
+  }
+
+  * {
+    @apply box-border;
+  }
+}
+
+@layer components {
+  .prose-legal {
+    @apply font-serif text-text-main;
+    text-align: justify;
+  }
+
+  .prose-legal p {
+    @apply mb-4 leading-[1.85];
+  }
+
+  .prose-legal h1,
+  .prose-legal h2 {
+    @apply font-serif font-bold text-navy mt-8 mb-3;
+  }
+
+  .prose-legal h1 {
+    @apply text-xl;
+  }
+
+  .prose-legal h2 {
+    @apply text-lg border-b border-border pb-2;
+  }
+
+  .prose-legal h3 {
+    @apply font-serif font-bold text-navy text-base mt-6 mb-2;
+  }
+
+  .prose-legal ul,
+  .prose-legal ol {
+    @apply ml-6 mb-4 space-y-1;
+  }
+
+  .prose-legal ul {
+    @apply list-disc;
+  }
+
+  .prose-legal ol {
+    @apply list-decimal;
+  }
+
+  .prose-legal li {
+    @apply leading-[1.7];
+  }
+
+  .prose-legal blockquote {
+    @apply border-l-4 border-gold/40 pl-4 py-2 my-4 bg-gold/5 italic;
+  }
+
+  .prose-legal em {
+    @apply italic;
+  }
+
+  .prose-legal strong {
+    @apply font-bold;
+  }
+
+  .prose-legal img {
+    @apply max-w-full h-auto my-4 border border-border rounded;
+  }
+
+  .prose-legal pre,
+  .prose-legal code {
+    @apply font-mono text-sm;
+  }
+
+  .prose-legal pre {
+    @apply bg-cream border-l-4 border-gold p-4 my-4 overflow-x-auto rounded-r;
+  }
+
+  .prose-legal a {
+    @apply text-blue-700 underline;
+  }
+
+  /* Paragraph numbering */
+  .prose-legal.numbered {
+    counter-reset: paragraph;
+  }
+
+  .prose-legal.numbered > p {
+    position: relative;
+    padding-left: 2.5rem;
+    counter-increment: paragraph;
+  }
+
+  .prose-legal.numbered > p::before {
+    content: counter(paragraph);
+    position: absolute;
+    left: 0;
+    @apply text-[10px] font-mono text-text-muted/40 mt-1;
+  }
+}
