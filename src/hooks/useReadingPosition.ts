@@ -2,6 +2,8 @@ import { useEffect, useRef, useCallback } from 'react';
 import { updateReadingPosition, getDocument } from '@/lib/storage';
 import type { ReadingPosition } from '@/types';
 
+const SAVE_DEBOUNCE_MS = 2000;
+
 export function useReadingPosition(
   documentId: string | null,
   scrollContainerRef: React.RefObject<HTMLElement | null>,
@@ -32,7 +34,7 @@ export function useReadingPosition(
 
     const handleScroll = () => {
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-      saveTimeoutRef.current = setTimeout(savePosition, 2000);
+      saveTimeoutRef.current = setTimeout(savePosition, SAVE_DEBOUNCE_MS);
     };
 
     el.addEventListener('scroll', handleScroll, { passive: true });

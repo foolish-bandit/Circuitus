@@ -52,6 +52,8 @@ export default function AuthoritiesSidebar({
               {doc.type === 'case' && doc.flagStatus && (
                 <span
                   className={`w-2 h-2 rounded-full ${FLAG_COLORS[doc.flagStatus]}`}
+                  role="img"
+                  aria-label={`${doc.flagStatus} treatment`}
                 />
               )}
             </div>

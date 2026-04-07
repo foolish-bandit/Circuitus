@@ -6,6 +6,7 @@ import type { StoredDocument } from '@/types';
 interface LibraryPageProps {
   onOpenDocument: (id: string) => void;
   onImport: () => void;
+  refreshKey?: number;
 }
 
 function timeAgo(iso: string): string {
@@ -26,13 +27,13 @@ const FILE_ICONS: Record<string, typeof BookOpen> = {
   txt: FileType,
 };
 
-export default function LibraryPage({ onOpenDocument, onImport }: LibraryPageProps) {
+export default function LibraryPage({ onOpenDocument, onImport, refreshKey = 0 }: LibraryPageProps) {
   const [documents, setDocuments] = useState<StoredDocument[]>([]);
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
 
   useEffect(() => {
     getAllDocuments().then(setDocuments);
-  }, []);
+  }, [refreshKey]);
 
   async function handleDelete(id: string) {
     await deleteDocument(id);
@@ -85,10 +86,13 @@ export default function LibraryPage({ onOpenDocument, onImport }: LibraryPagePro
             const Icon = FILE_ICONS[doc.fileType] || FileText;
             const matterNum = doc.id.slice(0, 4).toUpperCase();
             const progress = doc.readingPosition
-              ? Math.round(
-                  ((doc.readingPosition.chapterIndex + doc.readingPosition.scrollPercent / 100) /
-                    Math.max(doc.chapters.length, 1)) *
-                    100
+              ? Math.min(
+                  100,
+                  Math.round(
+                    ((doc.readingPosition.chapterIndex + doc.readingPosition.scrollPercent / 100) /
+                      Math.max(doc.chapters.length, 1)) *
+                      100
+                  ),
                 )
               : 0;
 
@@ -107,6 +111,7 @@ export default function LibraryPage({ onOpenDocument, onImport }: LibraryPagePro
                           e.stopPropagation();
                           setMenuOpen(menuOpen === doc.id ? null : doc.id);
                         }}
+                        aria-label="Document options"
                         className="p-1 text-text-muted hover:text-text-main rounded opacity-0 group-hover:opacity-100 transition-opacity"
                       >
                         <MoreVertical className="w-3.5 h-3.5" />

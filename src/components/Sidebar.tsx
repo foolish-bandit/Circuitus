@@ -36,6 +36,7 @@ export default function Sidebar({
               <li key={ch.id}>
                 <button
                   onClick={() => onChapterClick(i)}
+                  aria-current={activeChapterIndex === i ? 'true' : undefined}
                   className={`w-full text-left px-4 py-1.5 text-xs font-sans transition-colors border-l-2 ${
                     activeChapterIndex === i
                       ? 'border-gold bg-gold/5 text-navy font-medium'

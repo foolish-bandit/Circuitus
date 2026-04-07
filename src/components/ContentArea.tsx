@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { FileText, Bookmark, Highlighter } from 'lucide-react';
 import type { DocumentChapter } from '@/types';
 
@@ -20,6 +20,8 @@ interface ContentAreaProps {
   initialScrollPercent?: number;
   children?: React.ReactNode;
 }
+
+const CHAPTER_OBSERVER_ROOT_MARGIN = '-10% 0px -80% 0px';
 
 const HIGHLIGHT_COLORS: { color: 'yellow' | 'blue' | 'green'; bg: string; label: string }[] = [
   { color: 'yellow', bg: 'bg-yellow-300', label: 'Yellow' },
@@ -48,6 +50,12 @@ export default function ContentArea({
   const contentRef = useRef<HTMLDivElement>(null);
   const hasRestoredRef = useRef(false);
 
+  // Stable fallback ref number (generated once per mount)
+  const fallbackRefNumber = useMemo(
+    () => `CIR-2026-${String(Math.floor(Math.random() * 90000) + 10000)}`,
+    [],
+  );
+
   // Selection toolbar state
   const [selectionToolbar, setSelectionToolbar] = useState<{
     x: number;
@@ -75,7 +83,7 @@ export default function ContentArea({
       },
       {
         root: container,
-        rootMargin: '-10% 0px -80% 0px',
+        rootMargin: CHAPTER_OBSERVER_ROOT_MARGIN,
         threshold: 0,
       },
     );
@@ -155,17 +163,20 @@ export default function ContentArea({
     if (!chapters?.length || !onActiveChapterChange) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't intercept if user is typing in an input
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      // Don't intercept if user is typing or has an active selection context
+      const target = e.target as HTMLElement;
+      if (
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target.isContentEditable
+      ) return;
 
       if (e.key === 'ArrowLeft') {
-        e.preventDefault();
         const prev = Math.max(0, activeChapterIndex - 1);
         onActiveChapterChange(prev);
         const el = document.getElementById(`chapter-${prev}`);
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
       } else if (e.key === 'ArrowRight') {
-        e.preventDefault();
         const next = Math.min(chapters.length - 1, activeChapterIndex + 1);
         onActiveChapterChange(next);
         const el = document.getElementById(`chapter-${next}`);
@@ -229,7 +240,7 @@ export default function ContentArea({
             </p>
           )}
           <p className="font-mono text-[10px] text-text-muted tracking-wider">
-            Ref. {refNumber || `CIR-2026-${String(Math.floor(Math.random() * 90000) + 10000)}`}
+            Ref. {refNumber || fallbackRefNumber}
           </p>
         </div>
 
@@ -275,6 +286,8 @@ export default function ContentArea({
       {/* Selection floating toolbar */}
       {selectionToolbar && (
         <div
+          role="toolbar"
+          aria-label="Text annotation"
           className="absolute z-50 flex items-center gap-1 bg-navy rounded-lg shadow-lg px-2 py-1.5 -translate-x-1/2"
           style={{
             left: selectionToolbar.x,

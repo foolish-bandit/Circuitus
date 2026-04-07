@@ -2,6 +2,7 @@ import type { User } from '@/types';
 
 const STORAGE_KEY = 'circuitus_user';
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function login(email: string, _password: string): User {
   const user: User = {
     email,

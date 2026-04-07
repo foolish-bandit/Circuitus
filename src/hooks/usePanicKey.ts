@@ -52,7 +52,7 @@ export function usePanicKey() {
   return {
     isPanicked,
     togglePanic,
-    preState: preStateRef.current,
+    preStateRef,
     savePanicState,
   };
 }
