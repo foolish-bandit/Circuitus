@@ -209,7 +209,7 @@ export default function ContentArea({
   return (
     <div
       ref={effectiveScrollRef}
-      className="flex-1 overflow-y-auto bg-cream relative"
+      className="flex-1 overflow-y-auto bg-cream relative min-w-[600px]"
       onMouseUp={handleMouseUp}
     >
       <div className="max-w-reading-pane mx-auto bg-white min-h-full border-x border-border/50 shadow-sm px-12 py-10">

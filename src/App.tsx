@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { isAuthenticated, logout } from '@/lib/auth';
 import LoginPage from '@/pages/LoginPage';
 import MainLayout from '@/pages/MainLayout';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 export default function App() {
   const [authed, setAuthed] = useState(isAuthenticated);
@@ -16,5 +17,9 @@ export default function App() {
     return <LoginPage onLogin={handleLogin} />;
   }
 
-  return <MainLayout onLogout={handleLogout} />;
+  return (
+    <ErrorBoundary>
+      <MainLayout onLogout={handleLogout} />
+    </ErrorBoundary>
+  );
 }
