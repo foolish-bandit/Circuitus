@@ -48,6 +48,7 @@ export default function TopBar({
               onChange={(e) => onSearchChange(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && onSearchSubmit()}
               placeholder="Search guides, templates, authorities..."
+              aria-label="Search guides, templates, authorities"
               className="w-full bg-white/[0.06] border border-white/10 rounded pl-8 pr-3 py-1.5 text-xs text-white placeholder-white/30 font-sans focus:outline-none focus:border-gold/40 transition-colors"
             />
           </div>
@@ -59,6 +60,7 @@ export default function TopBar({
             <button
               key={item}
               onClick={() => onNavChange(item)}
+              aria-current={activeNav === item ? 'page' : undefined}
               className={`px-3 py-1 text-[11px] uppercase tracking-[0.1em] font-sans font-medium transition-colors rounded ${
                 activeNav === item
                   ? 'text-gold'

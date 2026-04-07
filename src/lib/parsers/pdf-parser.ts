@@ -1,7 +1,11 @@
 import * as pdfjsLib from 'pdfjs-dist';
 import type { ParsedDocument, DocumentChapter } from '@/types';
+import { escapeHtml } from './sanitize';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
+
+/** Y-position threshold (in PDF units) for grouping text items into the same line. */
+const LINE_Y_THRESHOLD = 2;
 
 export async function parsePdf(file: File): Promise<ParsedDocument> {
   const buffer = await file.arrayBuffer();
@@ -35,7 +39,7 @@ export async function parsePdf(file: File): Promise<ParsedDocument> {
     // Sort by Y position (descending) then X (ascending)
     items.sort((a, b) => {
       const yDiff = b.transform[5] - a.transform[5];
-      if (Math.abs(yDiff) > 2) return yDiff;
+      if (Math.abs(yDiff) > LINE_Y_THRESHOLD) return yDiff;
       return a.transform[4] - b.transform[4];
     });
 
@@ -46,7 +50,7 @@ export async function parsePdf(file: File): Promise<ParsedDocument> {
 
     for (let j = 1; j < items.length; j++) {
       const item = items[j];
-      if (Math.abs(item.transform[5] - currentY) < 2) {
+      if (Math.abs(item.transform[5] - currentY) < LINE_Y_THRESHOLD) {
         currentLine += ' ' + item.str;
       } else {
         lines.push(currentLine.trim());
@@ -92,11 +96,4 @@ export async function parsePdf(file: File): Promise<ParsedDocument> {
   }
 
   return { title, author, chapters };
-}
-
-function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
 }

@@ -1,5 +1,6 @@
 import JSZip from 'jszip';
 import type { ParsedDocument, DocumentChapter } from '@/types';
+import { sanitizeHtml } from './sanitize';
 
 export async function parseEpub(file: File): Promise<ParsedDocument> {
   const buffer = await file.arrayBuffer();
@@ -61,12 +62,13 @@ export async function parseEpub(file: File): Promise<ParsedDocument> {
       bodyContent = bodyMatch[1];
     }
 
-    // Strip script and style tags
+    // Strip scripts, styles, and sanitize against XSS
     bodyContent = bodyContent
       .replace(/<script[\s\S]*?<\/script>/gi, '')
       .replace(/<style[\s\S]*?<\/style>/gi, '')
       .replace(/\s*style="[^"]*"/gi, '')
       .replace(/\s*class="[^"]*"/gi, '');
+    bodyContent = sanitizeHtml(bodyContent);
 
     // Try to extract a title from the content
     const titleFromContent =

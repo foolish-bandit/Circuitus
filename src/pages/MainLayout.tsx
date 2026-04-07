@@ -15,11 +15,20 @@ import { usePanicKey } from '@/hooks/usePanicKey';
 import type { DocumentChapter, StoredDocument, StandinDocument } from '@/types';
 
 const FONT_SIZES = [13, 14.5, 16.5];
+const ERROR_BANNER_TIMEOUT_MS = 8000;
+const SEARCH_DELAY_MS = 1200;
+const LEFT_SIDEBAR_BREAKPOINT = 1200;
+const RIGHT_SIDEBAR_BREAKPOINT = 1400;
+const RESIZE_DEBOUNCE_MS = 150;
 
 import { standinDocuments as _standinDocs } from '@/data/standin-documents';
 
 function shuffleAndPick<T>(arr: T[], count: number): T[] {
-  const shuffled = [...arr].sort(() => Math.random() - 0.5);
+  const shuffled = [...arr];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
   return shuffled.slice(0, count);
 }
 
@@ -68,6 +77,9 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
   // Import error banner
   const [importError, setImportError] = useState<string | null>(null);
 
+  // Library refresh counter (incremented after import to trigger re-fetch)
+  const [libraryRefreshKey, setLibraryRefreshKey] = useState(0);
+
   // Responsive sidebar state
   const [hideLeftSidebar, setHideLeftSidebar] = useState(false);
   const [hideRightSidebar, setHideRightSidebar] = useState(false);
@@ -108,23 +120,44 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
   // Auto-dismiss import error banner
   useEffect(() => {
     if (!importError) return;
-    const timer = setTimeout(() => setImportError(null), 8000);
+    const timer = setTimeout(() => setImportError(null), ERROR_BANNER_TIMEOUT_MS);
     return () => clearTimeout(timer);
   }, [importError]);
+
+  // Dismiss search results on Escape
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        setSearchResults(null);
+        setSearchQuery('');
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const handleRefreshAuthorities = useCallback(() => {
     setSidebarDocs(shuffleAndPick(_standinDocs, Math.min(7, _standinDocs.length)));
   }, []);
 
-  // Responsive sidebar collapse
+  // Responsive sidebar collapse (debounced)
   useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
     function handleResize() {
-      setHideLeftSidebar(window.innerWidth < 1200);
-      setHideRightSidebar(window.innerWidth < 1400);
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        setHideLeftSidebar(window.innerWidth < LEFT_SIDEBAR_BREAKPOINT);
+        setHideRightSidebar(window.innerWidth < RIGHT_SIDEBAR_BREAKPOINT);
+      }, RESIZE_DEBOUNCE_MS);
     }
-    handleResize();
+    // Run immediately on mount
+    setHideLeftSidebar(window.innerWidth < LEFT_SIDEBAR_BREAKPOINT);
+    setHideRightSidebar(window.innerWidth < RIGHT_SIDEBAR_BREAKPOINT);
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      clearTimeout(timer);
+    };
   }, []);
 
   const handleFontSizeChange = useCallback((delta: number) => {
@@ -138,6 +171,27 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
   const handleImport = useCallback(() => {
     fileInputRef.current?.click();
   }, []);
+
+  const openDocument = useCallback(async (id: string) => {
+    const doc = await getDocument(id);
+    if (!doc) return;
+    setCurrentDoc(doc);
+    setChapters(doc.chapters);
+    setActiveChapterIndex(doc.readingPosition?.chapterIndex || 0);
+    setInitialScrollPercent(doc.readingPosition?.scrollPercent || 0);
+    setViewingStandin(null);
+    setStandinChapters([]);
+    setNavContent(null);
+
+    // Add tab if not present
+    setMatterTabs((prev) =>
+      prev.find((t) => t.id === id) ? prev : [...prev, { id, label: doc.title, type: 'uploaded' }]
+    );
+    setActiveTabId(id);
+
+    // Restore reading position after render
+    requestAnimationFrame(() => restorePosition());
+  }, [restorePosition]);
 
   const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -168,6 +222,7 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
       });
       await new Promise((r) => setTimeout(r, 400));
 
+      setLibraryRefreshKey((k) => k + 1);
       openDocument(id);
     } catch (err) {
       setImportError(err instanceof Error ? err.message : 'Failed to import document.');
@@ -176,28 +231,7 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
       setImportStatus('');
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
-  }, []);
-
-  async function openDocument(id: string) {
-    const doc = await getDocument(id);
-    if (!doc) return;
-    setCurrentDoc(doc);
-    setChapters(doc.chapters);
-    setActiveChapterIndex(doc.readingPosition?.chapterIndex || 0);
-    setInitialScrollPercent(doc.readingPosition?.scrollPercent || 0);
-    setViewingStandin(null);
-    setStandinChapters([]);
-    setNavContent(null);
-
-    // Add tab if not present
-    if (!matterTabs.find((t) => t.id === id)) {
-      setMatterTabs((prev) => [...prev, { id, label: doc.title, type: 'uploaded' }]);
-    }
-    setActiveTabId(id);
-
-    // Restore reading position after render
-    requestAnimationFrame(() => restorePosition());
-  }
+  }, [openDocument]);
 
   function handleBack() {
     setCurrentDoc(null);
@@ -207,7 +241,7 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
     setStandinChapters([]);
   }
 
-  function handleStandinClick(doc: StandinDocument) {
+  const handleStandinClick = useCallback((doc: StandinDocument) => {
     setViewingStandin(doc);
     const tempChapters = parseStandinChapters(doc.content);
     setStandinChapters(tempChapters);
@@ -215,40 +249,47 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
     setCurrentDoc(null);
     setNavContent(null);
 
-    if (!matterTabs.find((t) => t.id === doc.id)) {
-      setMatterTabs((prev) => [...prev, { id: doc.id, label: doc.shortTitle, type: 'standin' }]);
-    }
+    setMatterTabs((prev) =>
+      prev.find((t) => t.id === doc.id) ? prev : [...prev, { id: doc.id, label: doc.shortTitle, type: 'standin' }]
+    );
     setActiveTabId(doc.id);
-  }
+  }, []);
 
-  function handleTabClick(tabId: string) {
+  const handleTabClick = useCallback((tabId: string) => {
     // Save current scroll position before switching
-    if (activeTabId && scrollContainerRef.current) {
-      tabScrollPositions.current[activeTabId] = scrollContainerRef.current.scrollTop;
-    }
-    setActiveTabId(tabId);
+    setActiveTabId((prev) => {
+      if (prev && scrollContainerRef.current) {
+        tabScrollPositions.current[prev] = scrollContainerRef.current.scrollTop;
+      }
+      return tabId;
+    });
     // Check if standin
     const standin = _standinDocs.find((d) => d.id === tabId);
     if (standin) {
       handleStandinClick(standin);
     } else {
-      // Must be an uploaded doc
       openDocument(tabId);
     }
-  }
+  }, [handleStandinClick, openDocument]);
 
-  function handleTabClose(tabId: string) {
-    setMatterTabs((prev) => {
-      const filtered = prev.filter((t) => t.id !== tabId);
-      if (activeTabId === tabId && filtered.length > 0) {
-        setActiveTabId(filtered[0].id);
-        const standin = _standinDocs.find((d) => d.id === filtered[0].id);
-        if (standin) handleStandinClick(standin);
-        else openDocument(filtered[0].id);
-      }
-      return filtered;
+  const handleTabClose = useCallback((tabId: string) => {
+    setMatterTabs((prev) => prev.filter((t) => t.id !== tabId));
+
+    // Switch to next tab if closing the active one
+    setActiveTabId((currentActive) => {
+      if (currentActive !== tabId) return currentActive;
+      setMatterTabs((prev) => {
+        if (prev.length > 0) {
+          const nextId = prev[0].id;
+          const standin = _standinDocs.find((d) => d.id === nextId);
+          if (standin) handleStandinClick(standin);
+          else openDocument(nextId);
+        }
+        return prev;
+      });
+      return currentActive;
     });
-  }
+  }, [handleStandinClick, openDocument]);
 
   function handleChapterClick(index: number) {
     setActiveChapterIndex(index);
@@ -305,7 +346,7 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
     setSearchLoading(true);
     setSearchResults(null);
 
-    await new Promise((r) => setTimeout(r, 1200));
+    await new Promise((r) => setTimeout(r, SEARCH_DELAY_MS));
 
     const results: { label: string; docId?: string }[] = [];
     for (const doc of _standinDocs) {
@@ -485,7 +526,7 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
               </button>
             </ContentArea>
           ) : (
-            <LibraryPage onOpenDocument={openDocument} onImport={handleImport} />
+            <LibraryPage onOpenDocument={openDocument} onImport={handleImport} refreshKey={libraryRefreshKey} />
           )}
 
           {showRightSidebar && !hideRightSidebar && (

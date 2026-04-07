@@ -1,8 +1,10 @@
 import type { ParsedDocument, DocumentChapter } from '@/types';
+import { escapeHtml } from './sanitize';
 
 const CHAPTER_PATTERN = /^(chapter\s+\d+|part\s+\d+|section\s+\d+)/i;
 const SEPARATOR_PATTERN = /^(---+|\*\*\*+|===+)$/;
 const ALL_CAPS_HEADING = /^[A-Z][A-Z\s:,'-]{5,}$/;
+const CHUNK_SIZE = 3000;
 
 export function parseTxt(text: string, fileName: string): ParsedDocument {
   const title = fileName.replace(/\.txt$/i, '');
@@ -45,15 +47,14 @@ export function parseTxt(text: string, fileName: string): ParsedDocument {
       }
     }
   } else {
-    // Split into ~3000-character chunks
+    // Split into character chunks
     const fullText = lines.join('\n');
-    const chunkSize = 3000;
-    for (let i = 0; i < fullText.length; i += chunkSize) {
+    for (let i = 0; i < fullText.length; i += CHUNK_SIZE) {
       // Try to break at a paragraph boundary
-      let end = Math.min(i + chunkSize, fullText.length);
+      let end = Math.min(i + CHUNK_SIZE, fullText.length);
       if (end < fullText.length) {
         const lastBreak = fullText.lastIndexOf('\n\n', end);
-        if (lastBreak > i + chunkSize / 2) end = lastBreak;
+        if (lastBreak > i + CHUNK_SIZE / 2) end = lastBreak;
       }
 
       const chunk = fullText.slice(i, end);
@@ -99,9 +100,3 @@ function linesToHtml(lines: string[]): string {
     .join('\n');
 }
 
-function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-}
