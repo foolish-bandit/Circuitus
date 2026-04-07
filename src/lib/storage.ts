@@ -1,0 +1,126 @@
+import { openDB, type IDBPDatabase } from 'idb';
+import type { StoredDocument, Bookmark, Highlight, ReadingPosition } from '@/types';
+
+interface CircuitusDB {
+  documents: {
+    key: string;
+    value: StoredDocument;
+    indexes: {
+      'by-dateAdded': string;
+      'by-lastOpened': string;
+    };
+  };
+  bookmarks: {
+    key: string;
+    value: Bookmark;
+    indexes: {
+      'by-documentId': string;
+    };
+  };
+  highlights: {
+    key: string;
+    value: Highlight;
+    indexes: {
+      'by-documentId': string;
+    };
+  };
+}
+
+let dbPromise: Promise<IDBPDatabase<CircuitusDB>> | null = null;
+
+function getDB() {
+  if (!dbPromise) {
+    dbPromise = openDB<CircuitusDB>('circuitus-db', 1, {
+      upgrade(db) {
+        const docStore = db.createObjectStore('documents', { keyPath: 'id' });
+        docStore.createIndex('by-dateAdded', 'dateAdded');
+        docStore.createIndex('by-lastOpened', 'lastOpened');
+
+        const bmStore = db.createObjectStore('bookmarks', { keyPath: 'id' });
+        bmStore.createIndex('by-documentId', 'documentId');
+
+        const hlStore = db.createObjectStore('highlights', { keyPath: 'id' });
+        hlStore.createIndex('by-documentId', 'documentId');
+      },
+    });
+  }
+  return dbPromise;
+}
+
+// Documents
+export async function saveDocument(doc: Omit<StoredDocument, 'id'>): Promise<string> {
+  const db = await getDB();
+  const id = crypto.randomUUID();
+  const full: StoredDocument = { ...doc, id };
+  await db.put('documents', full);
+  return id;
+}
+
+export async function getDocument(id: string): Promise<StoredDocument | undefined> {
+  const db = await getDB();
+  return db.get('documents', id);
+}
+
+export async function getAllDocuments(): Promise<StoredDocument[]> {
+  const db = await getDB();
+  const all = await db.getAll('documents');
+  return all.sort((a, b) => (b.lastOpened || b.dateAdded).localeCompare(a.lastOpened || a.dateAdded));
+}
+
+export async function updateReadingPosition(id: string, position: ReadingPosition): Promise<void> {
+  const db = await getDB();
+  const doc = await db.get('documents', id);
+  if (doc) {
+    doc.readingPosition = position;
+    doc.lastOpened = new Date().toISOString();
+    await db.put('documents', doc);
+  }
+}
+
+export async function deleteDocument(id: string): Promise<void> {
+  const db = await getDB();
+  await db.delete('documents', id);
+  // Also delete associated bookmarks and highlights
+  const bms = await getBookmarks(id);
+  for (const bm of bms) await db.delete('bookmarks', bm.id);
+  const hls = await getHighlights(id);
+  for (const hl of hls) await db.delete('highlights', hl.id);
+}
+
+// Bookmarks
+export async function saveBookmark(bookmark: Omit<Bookmark, 'id'>): Promise<string> {
+  const db = await getDB();
+  const id = crypto.randomUUID();
+  const full: Bookmark = { ...bookmark, id };
+  await db.put('bookmarks', full);
+  return id;
+}
+
+export async function getBookmarks(documentId: string): Promise<Bookmark[]> {
+  const db = await getDB();
+  return db.getAllFromIndex('bookmarks', 'by-documentId', documentId);
+}
+
+export async function deleteBookmark(id: string): Promise<void> {
+  const db = await getDB();
+  await db.delete('bookmarks', id);
+}
+
+// Highlights
+export async function saveHighlight(highlight: Omit<Highlight, 'id'>): Promise<string> {
+  const db = await getDB();
+  const id = crypto.randomUUID();
+  const full: Highlight = { ...highlight, id };
+  await db.put('highlights', full);
+  return id;
+}
+
+export async function getHighlights(documentId: string): Promise<Highlight[]> {
+  const db = await getDB();
+  return db.getAllFromIndex('highlights', 'by-documentId', documentId);
+}
+
+export async function deleteHighlight(id: string): Promise<void> {
+  const db = await getDB();
+  await db.delete('highlights', id);
+}

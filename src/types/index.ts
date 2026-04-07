@@ -1,0 +1,68 @@
+export interface User {
+  email: string;
+  loggedIn: boolean;
+  loginTime: string;
+}
+
+export interface DocumentChapter {
+  id: string;
+  title: string;
+  content: string;
+}
+
+export interface ReadingPosition {
+  chapterIndex: number;
+  scrollPercent: number;
+}
+
+export interface StoredDocument {
+  id: string;
+  title: string;
+  author: string;
+  fileName: string;
+  fileType: 'epub' | 'pdf' | 'txt';
+  chapters: DocumentChapter[];
+  dateAdded: string;
+  lastOpened: string;
+  readingPosition: ReadingPosition;
+}
+
+export interface Bookmark {
+  id: string;
+  documentId: string;
+  chapterIndex: number;
+  scrollPercent: number;
+  selectedText?: string;
+  note?: string;
+  dateCreated: string;
+  label: string;
+}
+
+export interface Highlight {
+  id: string;
+  documentId: string;
+  chapterIndex: number;
+  startOffset: number;
+  endOffset: number;
+  selectedText: string;
+  color: 'yellow' | 'blue' | 'green';
+  dateCreated: string;
+}
+
+export interface ParsedDocument {
+  title: string;
+  author: string;
+  chapters: DocumentChapter[];
+}
+
+export interface StandinDocument {
+  id: string;
+  type: 'guide' | 'article' | 'case';
+  title: string;
+  shortTitle: string;
+  description: string;
+  refNumber: string;
+  lastUpdated: string;
+  content: string;
+  flagStatus: null | 'positive' | 'caution' | 'negative';
+}
