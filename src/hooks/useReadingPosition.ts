@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { updateReadingPosition } from '@/lib/storage';
+import { updateReadingPosition, getDocument } from '@/lib/storage';
 import type { ReadingPosition } from '@/types';
 
 export function useReadingPosition(
@@ -25,6 +25,7 @@ export function useReadingPosition(
     updateReadingPosition(documentId, position);
   }, [documentId, chapterIndex, scrollContainerRef]);
 
+  // Debounced save on scroll (every 2s)
   useEffect(() => {
     const el = scrollContainerRef.current;
     if (!el || !documentId) return;
@@ -41,5 +42,26 @@ export function useReadingPosition(
     };
   }, [documentId, savePosition, scrollContainerRef]);
 
-  return { savePosition };
+  // Restore scroll position on document open
+  const restorePosition = useCallback(async () => {
+    if (!documentId || !scrollContainerRef.current) return null;
+
+    const doc = await getDocument(documentId);
+    if (!doc?.readingPosition) return null;
+
+    const el = scrollContainerRef.current;
+    const { scrollPercent, chapterIndex: savedChapter } = doc.readingPosition;
+
+    if (scrollPercent > 0) {
+      // Wait for content to render
+      requestAnimationFrame(() => {
+        const scrollTarget = (el.scrollHeight - el.clientHeight) * (scrollPercent / 100);
+        el.scrollTop = scrollTarget;
+      });
+    }
+
+    return { chapterIndex: savedChapter, scrollPercent };
+  }, [documentId, scrollContainerRef]);
+
+  return { savePosition, restorePosition };
 }

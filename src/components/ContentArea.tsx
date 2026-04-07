@@ -1,38 +1,240 @@
-import { FileText } from 'lucide-react';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { FileText, Bookmark, Highlighter } from 'lucide-react';
+import type { DocumentChapter } from '@/types';
 
 interface ContentAreaProps {
-  children?: React.ReactNode;
+  /** Render chapters sequentially (uploaded docs) */
+  chapters?: DocumentChapter[];
+  /** Render raw HTML blob (standin docs) */
+  rawContent?: string;
   refNumber?: string;
   documentTitle?: string;
   isEmpty?: boolean;
+  fontSize?: number;
+  showParagraphNumbers?: boolean;
+  activeChapterIndex?: number;
+  onActiveChapterChange?: (index: number) => void;
+  onHighlight?: (text: string, color: 'yellow' | 'blue' | 'green') => void;
+  onBookmark?: (text: string) => void;
+  scrollContainerRef?: React.RefObject<HTMLDivElement | null>;
+  initialScrollPercent?: number;
+  children?: React.ReactNode;
 }
 
+const HIGHLIGHT_COLORS: { color: 'yellow' | 'blue' | 'green'; bg: string; label: string }[] = [
+  { color: 'yellow', bg: 'bg-yellow-300', label: 'Yellow' },
+  { color: 'blue', bg: 'bg-blue-300', label: 'Blue' },
+  { color: 'green', bg: 'bg-green-300', label: 'Green' },
+];
+
 export default function ContentArea({
-  children,
+  chapters,
+  rawContent,
   refNumber,
   documentTitle,
   isEmpty = true,
+  fontSize = 14.5,
+  showParagraphNumbers = false,
+  activeChapterIndex = 0,
+  onActiveChapterChange,
+  onHighlight,
+  onBookmark,
+  scrollContainerRef,
+  initialScrollPercent,
+  children,
 }: ContentAreaProps) {
+  const internalScrollRef = useRef<HTMLDivElement>(null);
+  const effectiveScrollRef = scrollContainerRef ?? internalScrollRef;
+  const contentRef = useRef<HTMLDivElement>(null);
+  const hasRestoredRef = useRef(false);
+
+  // Selection toolbar state
+  const [selectionToolbar, setSelectionToolbar] = useState<{
+    x: number;
+    y: number;
+    text: string;
+  } | null>(null);
+
+  // --- IntersectionObserver for active chapter tracking ---
+  useEffect(() => {
+    if (!chapters?.length || !onActiveChapterChange) return;
+
+    const container = effectiveScrollRef.current;
+    if (!container) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            const idx = Number(entry.target.getAttribute('data-chapter-index'));
+            if (!isNaN(idx)) {
+              onActiveChapterChange(idx);
+            }
+          }
+        }
+      },
+      {
+        root: container,
+        rootMargin: '-10% 0px -80% 0px',
+        threshold: 0,
+      },
+    );
+
+    const headings = container.querySelectorAll('[data-chapter-index]');
+    headings.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, [chapters, onActiveChapterChange, effectiveScrollRef]);
+
+  // --- Restore scroll position on mount ---
+  useEffect(() => {
+    if (hasRestoredRef.current || !initialScrollPercent || initialScrollPercent <= 0) return;
+    const el = effectiveScrollRef.current;
+    if (!el) return;
+
+    // Wait a tick for content to render
+    requestAnimationFrame(() => {
+      const scrollTarget = (el.scrollHeight - el.clientHeight) * (initialScrollPercent / 100);
+      el.scrollTop = scrollTarget;
+      hasRestoredRef.current = true;
+    });
+  }, [initialScrollPercent, effectiveScrollRef]);
+
+  // Reset restore flag when document changes
+  useEffect(() => {
+    hasRestoredRef.current = false;
+  }, [documentTitle]);
+
+  // --- Exhibit captions for images ---
+  useEffect(() => {
+    if (!contentRef.current) return;
+    const images = contentRef.current.querySelectorAll('img:not([data-exhibit-processed])');
+    let exhibitCount = contentRef.current.querySelectorAll('.exhibit-caption').length;
+
+    images.forEach((img) => {
+      img.setAttribute('data-exhibit-processed', 'true');
+      exhibitCount++;
+      const caption = document.createElement('figcaption');
+      caption.className = 'exhibit-caption';
+      caption.textContent = `Exhibit ${exhibitCount}`;
+
+      const figure = document.createElement('figure');
+      figure.className = 'exhibit-figure';
+      img.parentNode?.insertBefore(figure, img);
+      figure.appendChild(img);
+      figure.appendChild(caption);
+    });
+  }, [chapters, rawContent]);
+
+  // --- Text selection toolbar ---
+  const handleMouseUp = useCallback(() => {
+    const selection = window.getSelection();
+    if (!selection || selection.isCollapsed || !selection.toString().trim()) {
+      // Delay hiding to allow toolbar clicks
+      setTimeout(() => setSelectionToolbar(null), 200);
+      return;
+    }
+
+    const text = selection.toString().trim();
+    if (text.length < 2) return;
+
+    const range = selection.getRangeAt(0);
+    const rect = range.getBoundingClientRect();
+    const containerRect = effectiveScrollRef.current?.getBoundingClientRect();
+    if (!containerRect) return;
+
+    setSelectionToolbar({
+      x: rect.left + rect.width / 2 - containerRect.left,
+      y: rect.top - containerRect.top - 8,
+      text,
+    });
+  }, [effectiveScrollRef]);
+
+  // --- Left/Right arrow key chapter navigation ---
+  useEffect(() => {
+    if (!chapters?.length || !onActiveChapterChange) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't intercept if user is typing in an input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        const prev = Math.max(0, activeChapterIndex - 1);
+        onActiveChapterChange(prev);
+        const el = document.getElementById(`chapter-${prev}`);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        const next = Math.min(chapters.length - 1, activeChapterIndex + 1);
+        onActiveChapterChange(next);
+        const el = document.getElementById(`chapter-${next}`);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [chapters, activeChapterIndex, onActiveChapterChange]);
+
+  const handleHighlight = (color: 'yellow' | 'blue' | 'green') => {
+    if (!selectionToolbar) return;
+    onHighlight?.(selectionToolbar.text, color);
+
+    // Apply visual highlight to the selection
+    const selection = window.getSelection();
+    if (selection && !selection.isCollapsed) {
+      try {
+        const range = selection.getRangeAt(0);
+        const mark = document.createElement('mark');
+        mark.className = `highlight-${color}`;
+        range.surroundContents(mark);
+      } catch {
+        // If range spans multiple elements, just save without visual
+      }
+      selection.removeAllRanges();
+    }
+    setSelectionToolbar(null);
+  };
+
+  const handleBookmark = () => {
+    if (!selectionToolbar) return;
+    onBookmark?.(selectionToolbar.text);
+    window.getSelection()?.removeAllRanges();
+    setSelectionToolbar(null);
+  };
+
+  const hasContent = !isEmpty && (chapters?.length || rawContent || children);
+
   return (
-    <div className="flex-1 overflow-y-auto bg-cream">
+    <div
+      ref={effectiveScrollRef}
+      className="flex-1 overflow-y-auto bg-cream relative"
+      onMouseUp={handleMouseUp}
+    >
       <div className="max-w-reading-pane mx-auto bg-white min-h-full border-x border-border/50 shadow-sm px-12 py-10">
         {/* Legal header */}
         <div className="text-center mb-8 pb-6 border-b border-border">
           <p className="text-[10px] font-serif uppercase tracking-[0.2em] text-navy/60 mb-1">
-            Circuitus Practice Resource
+            CIRCUITUS PRACTICE RESOURCE
           </p>
-          <p className="text-xs font-sans text-text-muted mb-2">
-            {documentTitle
-              ? `Reference Library — ${documentTitle}`
-              : 'In-House Counsel Reference Library — Transactional Division'}
-          </p>
+          {documentTitle && (
+            <h1 className="font-serif text-lg font-bold text-navy mt-2 mb-2 leading-snug">
+              {documentTitle}
+            </h1>
+          )}
+          {!documentTitle && (
+            <p className="text-xs font-sans text-text-muted mb-2">
+              In-House Counsel Reference Library — Transactional Division
+            </p>
+          )}
           <p className="font-mono text-[10px] text-text-muted tracking-wider">
             Ref. {refNumber || `CIR-2026-${String(Math.floor(Math.random() * 90000) + 10000)}`}
           </p>
         </div>
 
         {/* Content */}
-        {isEmpty ? (
+        {!hasContent ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <FileText className="w-12 h-12 text-border mb-4" />
             <p className="text-sm font-sans text-text-muted max-w-sm leading-relaxed">
@@ -40,9 +242,71 @@ export default function ContentArea({
             </p>
           </div>
         ) : (
-          children
+          <div ref={contentRef}>
+            {/* Pass-through children (e.g. back button) */}
+            {children}
+
+            {/* Chapters rendered sequentially */}
+            {chapters?.map((ch, i) => (
+              <div key={ch.id} id={`chapter-${i}`} data-chapter-index={i} className="mb-10">
+                <h2 className="font-serif text-navy font-bold text-lg border-b border-border pb-2 mb-4">
+                  &sect; {i + 1}. {ch.title}
+                </h2>
+                <div
+                  className={`prose-legal ${showParagraphNumbers ? 'numbered' : ''}`}
+                  style={{ fontSize: `${fontSize}px`, lineHeight: '1.85' }}
+                  dangerouslySetInnerHTML={{ __html: ch.content }}
+                />
+              </div>
+            ))}
+
+            {/* Raw HTML content (standin documents) */}
+            {rawContent && !chapters?.length && (
+              <div
+                className={`prose-legal ${showParagraphNumbers ? 'numbered' : ''}`}
+                style={{ fontSize: `${fontSize}px`, lineHeight: '1.85' }}
+                dangerouslySetInnerHTML={{ __html: rawContent }}
+              />
+            )}
+          </div>
         )}
       </div>
+
+      {/* Selection floating toolbar */}
+      {selectionToolbar && (
+        <div
+          className="absolute z-50 flex items-center gap-1 bg-navy rounded-lg shadow-lg px-2 py-1.5 -translate-x-1/2"
+          style={{
+            left: selectionToolbar.x,
+            top: selectionToolbar.y,
+            transform: 'translate(-50%, -100%)',
+          }}
+        >
+          {/* Highlight buttons */}
+          <div className="flex items-center gap-0.5 mr-1">
+            <Highlighter className="w-3 h-3 text-white/60 mr-1" />
+            {HIGHLIGHT_COLORS.map((h) => (
+              <button
+                key={h.color}
+                onClick={() => handleHighlight(h.color)}
+                className={`w-5 h-5 rounded-full ${h.bg} hover:ring-2 hover:ring-white/50 transition-all`}
+                title={`Highlight ${h.label}`}
+              />
+            ))}
+          </div>
+
+          <div className="w-px h-4 bg-white/20 mx-1" />
+
+          {/* Bookmark button */}
+          <button
+            onClick={handleBookmark}
+            className="flex items-center gap-1 text-white/80 hover:text-white text-[10px] font-sans px-1.5 py-0.5 rounded hover:bg-white/10 transition-colors"
+          >
+            <Bookmark className="w-3 h-3" />
+            Add Marker
+          </button>
+        </div>
+      )}
     </div>
   );
 }

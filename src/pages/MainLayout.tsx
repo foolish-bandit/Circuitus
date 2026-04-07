@@ -9,7 +9,7 @@ import MatterTabs from '@/components/MatterTabs';
 import type { MatterTab } from '@/components/MatterTabs';
 import LibraryPage from '@/pages/LibraryPage';
 import { parseFile } from '@/lib/parsers';
-import { saveDocument, getDocument } from '@/lib/storage';
+import { saveDocument, getDocument, saveHighlight, saveBookmark } from '@/lib/storage';
 import { useReadingPosition } from '@/hooks/useReadingPosition';
 import { usePanicKey } from '@/hooks/usePanicKey';
 import type { DocumentChapter, StoredDocument, StandinDocument } from '@/types';
@@ -68,7 +68,10 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  useReadingPosition(currentDoc?.id ?? null, scrollContainerRef, activeChapterIndex);
+  const { restorePosition } = useReadingPosition(currentDoc?.id ?? null, scrollContainerRef, activeChapterIndex);
+
+  // Reading position restore state
+  const [initialScrollPercent, setInitialScrollPercent] = useState(0);
 
   // Save state before panic
   useEffect(() => {
@@ -138,6 +141,7 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
     setCurrentDoc(doc);
     setChapters(doc.chapters);
     setActiveChapterIndex(doc.readingPosition?.chapterIndex || 0);
+    setInitialScrollPercent(doc.readingPosition?.scrollPercent || 0);
     setViewingStandin(null);
     setStandinChapters([]);
     setNavContent(null);
@@ -147,6 +151,9 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
       setMatterTabs((prev) => [...prev, { id, label: doc.title, type: 'uploaded' }]);
     }
     setActiveTabId(id);
+
+    // Restore reading position after render
+    requestAnimationFrame(() => restorePosition());
   }
 
   function handleBack() {
@@ -200,6 +207,37 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
     setActiveChapterIndex(index);
     const el = document.getElementById(`chapter-${index}`);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function handleHighlight(text: string, color: 'yellow' | 'blue' | 'green') {
+    const docId = currentDoc?.id || viewingStandin?.id;
+    if (!docId) return;
+    saveHighlight({
+      documentId: docId,
+      chapterIndex: activeChapterIndex,
+      startOffset: 0,
+      endOffset: text.length,
+      selectedText: text,
+      color,
+      dateCreated: new Date().toISOString(),
+    });
+  }
+
+  function handleBookmark(text: string) {
+    const docId = currentDoc?.id || viewingStandin?.id;
+    if (!docId) return;
+    const el = scrollContainerRef.current;
+    const scrollPercent = el && el.scrollHeight > el.clientHeight
+      ? (el.scrollTop / (el.scrollHeight - el.clientHeight)) * 100
+      : 0;
+    saveBookmark({
+      documentId: docId,
+      chapterIndex: activeChapterIndex,
+      scrollPercent: Math.round(scrollPercent * 100) / 100,
+      selectedText: text,
+      dateCreated: new Date().toISOString(),
+      label: text.slice(0, 60) + (text.length > 60 ? '...' : ''),
+    });
   }
 
   function handleNavChange(nav: string) {
@@ -369,36 +407,23 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
               isEmpty={false}
               refNumber={refNumber}
               documentTitle={contentTitle}
+              chapters={viewingStandin ? undefined : chapters}
+              rawContent={viewingStandin ? viewingStandin.content : undefined}
+              fontSize={fontSize}
+              showParagraphNumbers={showParagraphNumbers}
+              activeChapterIndex={activeChapterIndex}
+              onActiveChapterChange={setActiveChapterIndex}
+              onHighlight={handleHighlight}
+              onBookmark={handleBookmark}
+              scrollContainerRef={scrollContainerRef}
+              initialScrollPercent={initialScrollPercent}
             >
-              <div ref={scrollContainerRef}>
-                <button
-                  onClick={handleBack}
-                  className="text-xs font-sans text-blue-600 hover:underline mb-6 inline-block"
-                >
-                  &larr; Back to Matters
-                </button>
-
-                {viewingStandin ? (
-                  <div
-                    className={`prose-legal ${showParagraphNumbers ? 'numbered' : ''}`}
-                    style={{ fontSize: `${fontSize}px`, lineHeight: '1.85' }}
-                    dangerouslySetInnerHTML={{ __html: viewingStandin.content }}
-                  />
-                ) : (
-                  chapters.map((ch, i) => (
-                    <div key={ch.id} id={`chapter-${i}`} className="mb-10">
-                      <h2 className="font-serif text-navy font-bold text-lg border-b border-border pb-2 mb-4">
-                        &sect; {i + 1}. {ch.title}
-                      </h2>
-                      <div
-                        className={`prose-legal ${showParagraphNumbers ? 'numbered' : ''}`}
-                        style={{ fontSize: `${fontSize}px`, lineHeight: '1.85' }}
-                        dangerouslySetInnerHTML={{ __html: ch.content }}
-                      />
-                    </div>
-                  ))
-                )}
-              </div>
+              <button
+                onClick={handleBack}
+                className="text-xs font-sans text-blue-600 hover:underline mb-6 inline-block"
+              >
+                &larr; Back to Matters
+              </button>
             </ContentArea>
           ) : (
             <LibraryPage onOpenDocument={openDocument} onImport={handleImport} />
@@ -460,9 +485,10 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
             isEmpty={false}
             refNumber="CIR-PG-2026-001"
             documentTitle="Structuring Statements of Work Under California Law"
-          >
-            <PanicContent content={panicDoc?.content || ''} fontSize={fontSize} />
-          </ContentArea>
+            rawContent={panicDoc?.content || ''}
+            fontSize={fontSize}
+            showParagraphNumbers={showParagraphNumbers}
+          />
 
           {showRightSidebar && (
             <AuthoritiesSidebar
@@ -485,27 +511,6 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
         onChange={handleFileChange}
       />
     </div>
-  );
-}
-
-function PanicContent({ content, fontSize }: { content: string; fontSize: number }) {
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    // Scroll to ~40% on mount
-    if (ref.current) {
-      const scrollTarget = ref.current.scrollHeight * 0.4;
-      ref.current.scrollTop = scrollTarget;
-    }
-  }, []);
-
-  return (
-    <div
-      ref={ref}
-      className="prose-legal"
-      style={{ fontSize: `${fontSize}px`, lineHeight: '1.85' }}
-      dangerouslySetInnerHTML={{ __html: content }}
-    />
   );
 }
 
