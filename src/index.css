@@ -73,7 +73,20 @@
   }
 
   .prose-legal img {
-    @apply max-w-full h-auto my-4 border border-border rounded;
+    @apply max-w-full h-auto my-4 border border-border/60 rounded shadow-sm;
+  }
+
+  /* Exhibit figures (images with captions) */
+  .exhibit-figure {
+    @apply my-6 text-center;
+  }
+
+  .exhibit-figure img {
+    @apply mx-auto border border-border/60 rounded shadow-sm;
+  }
+
+  .exhibit-caption {
+    @apply text-[10px] font-sans font-semibold uppercase tracking-[0.15em] text-text-muted mt-2;
   }
 
   .prose-legal pre,
@@ -81,8 +94,14 @@
     @apply font-mono text-sm;
   }
 
+  /* Extracted provisions — code blocks restyled with gold left border */
   .prose-legal pre {
-    @apply bg-cream border-l-4 border-gold p-4 my-4 overflow-x-auto rounded-r;
+    @apply bg-cream border-l-4 border-gold p-4 my-4 overflow-x-auto rounded-r relative;
+  }
+
+  .prose-legal pre::before {
+    content: 'Extracted Provision';
+    @apply text-[9px] font-sans font-semibold uppercase tracking-[0.15em] text-gold-dim block mb-2;
   }
 
   .prose-legal a {
@@ -105,5 +124,18 @@
     position: absolute;
     left: 0;
     @apply text-[10px] font-mono text-text-muted/40 mt-1;
+  }
+
+  /* Text highlight marks */
+  mark.highlight-yellow {
+    @apply bg-yellow-200/70 rounded-sm px-0.5;
+  }
+
+  mark.highlight-blue {
+    @apply bg-blue-200/70 rounded-sm px-0.5;
+  }
+
+  mark.highlight-green {
+    @apply bg-green-200/70 rounded-sm px-0.5;
   }
 }
