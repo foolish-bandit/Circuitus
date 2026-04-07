@@ -42,7 +42,7 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
   const [importStatus, setImportStatus] = useState('');
 
   // Standin docs
-  const [sidebarDocs] = useState<StandinDocument[]>(() => shuffleAndPick(_standinDocs, Math.min(7, _standinDocs.length)));
+  const [sidebarDocs, setSidebarDocs] = useState<StandinDocument[]>(() => shuffleAndPick(_standinDocs, Math.min(7, _standinDocs.length)));
   const [viewingStandin, setViewingStandin] = useState<StandinDocument | null>(null);
   const [standinChapters, setStandinChapters] = useState<DocumentChapter[]>([]);
 
@@ -65,8 +65,16 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
   const [searchResults, setSearchResults] = useState<{ label: string; docId?: string }[] | null>(null);
   const [searchLoading, setSearchLoading] = useState(false);
 
+  // Import error banner
+  const [importError, setImportError] = useState<string | null>(null);
+
+  // Responsive sidebar state
+  const [hideLeftSidebar, setHideLeftSidebar] = useState(false);
+  const [hideRightSidebar, setHideRightSidebar] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const tabScrollPositions = useRef<Record<string, number>>({});
 
   const { restorePosition } = useReadingPosition(currentDoc?.id ?? null, scrollContainerRef, activeChapterIndex);
 
@@ -83,6 +91,41 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
       );
     }
   }, [isPanicked, currentDoc, activeTabId, savePanicState]);
+
+  // Restore scroll position when tab changes
+  useEffect(() => {
+    if (!activeTabId) return;
+    const saved = tabScrollPositions.current[activeTabId];
+    if (saved != null) {
+      requestAnimationFrame(() => {
+        if (scrollContainerRef.current) {
+          scrollContainerRef.current.scrollTop = saved;
+        }
+      });
+    }
+  }, [activeTabId]);
+
+  // Auto-dismiss import error banner
+  useEffect(() => {
+    if (!importError) return;
+    const timer = setTimeout(() => setImportError(null), 8000);
+    return () => clearTimeout(timer);
+  }, [importError]);
+
+  const handleRefreshAuthorities = useCallback(() => {
+    setSidebarDocs(shuffleAndPick(_standinDocs, Math.min(7, _standinDocs.length)));
+  }, []);
+
+  // Responsive sidebar collapse
+  useEffect(() => {
+    function handleResize() {
+      setHideLeftSidebar(window.innerWidth < 1200);
+      setHideRightSidebar(window.innerWidth < 1400);
+    }
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const handleFontSizeChange = useCallback((delta: number) => {
     setFontSize((prev) => {
@@ -127,7 +170,7 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
 
       openDocument(id);
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to import document.');
+      setImportError(err instanceof Error ? err.message : 'Failed to import document.');
     } finally {
       setImporting(false);
       setImportStatus('');
@@ -179,6 +222,10 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
   }
 
   function handleTabClick(tabId: string) {
+    // Save current scroll position before switching
+    if (activeTabId && scrollContainerRef.current) {
+      tabScrollPositions.current[activeTabId] = scrollContainerRef.current.scrollTop;
+    }
     setActiveTabId(tabId);
     // Check if standin
     const standin = _standinDocs.find((d) => d.id === tabId);
@@ -384,14 +431,26 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
           </div>
         )}
 
+        {importError && (
+          <div
+            className="bg-red-50 border-b border-red-200 px-4 py-2 flex items-center justify-between flex-shrink-0 cursor-pointer"
+            onClick={() => setImportError(null)}
+          >
+            <span className="text-xs font-sans text-red-700">{importError}</span>
+            <span className="text-xs font-sans text-red-400 ml-4">✕</span>
+          </div>
+        )}
+
         <div className="flex flex-1 overflow-hidden">
-          <Sidebar
-            chapters={activeChaptersForSidebar}
-            activeChapterIndex={activeChapterIndex}
-            onChapterClick={handleChapterClick}
-            documentTitle={contentTitle}
-            documentType={currentDoc?.fileType || (viewingStandin ? 'guide' : undefined)}
-          />
+          {!hideLeftSidebar && (
+            <Sidebar
+              chapters={activeChaptersForSidebar}
+              activeChapterIndex={activeChapterIndex}
+              onChapterClick={handleChapterClick}
+              documentTitle={contentTitle}
+              documentType={currentDoc?.fileType || (viewingStandin ? 'guide' : undefined)}
+            />
+          )}
 
           {navContent ? (
             <div className="flex-1 flex items-center justify-center bg-cream">
@@ -429,11 +488,11 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
             <LibraryPage onOpenDocument={openDocument} onImport={handleImport} />
           )}
 
-          {showRightSidebar && (
+          {showRightSidebar && !hideRightSidebar && (
             <AuthoritiesSidebar
               documents={sidebarDocs}
               onDocumentClick={handleStandinClick}
-              onRefresh={() => {}}
+              onRefresh={handleRefreshAuthorities}
             />
           )}
         </div>
