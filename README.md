@@ -74,7 +74,7 @@ Navy and gold color scheme with a cream content background. Serif fonts (Libre B
 
 ## License
 
-GLP-3.0
+GPL-3.0
 
 ---
 
