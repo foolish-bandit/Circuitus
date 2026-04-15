@@ -71,3 +71,11 @@ Scroll position is tracked with a 2-second debounce and saved per-document to In
 
 ### Design Language
 Navy and gold color scheme with a cream content background. Serif fonts (Libre Baskerville) for document headers and body text; sans-serif for interface chrome. Monospace for reference numbers. The visual language is intentionally formal — styled to feel like a professional legal research tool rather than a generic document viewer.
+
+## License
+
+GLP-3.0
+
+---
+
+Built by [Zack Brenner](https://github.com/foolish-bandit)
