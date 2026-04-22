@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="images/Circuitus-readme.png" style="max-width:100%; height:auto;" />
+</p>
+
 # Circuitus
 
 **The Tech-Forward Suite for Counsel** — a web-based legal research and reference platform built for in-house legal teams. Circuitus provides practical guidance, transactional intelligence, and document management in a reading-optimized interface designed around how lawyers actually work.
