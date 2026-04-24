@@ -1,85 +1,147 @@
 <p align="center">
-  <img src="images/Circuitus-readme.png" style="max-width:100%; height:auto;" />
+  <img src="images/Circuitus-readme.png" alt="Circuitus — The Tech-Forward Suite for Counsel" width="540" />
 </p>
 
-# Circuitus
+<p align="center">
+  <strong>Legal research that looks like legal research.</strong>
+</p>
 
-**The Tech-Forward Suite for Counsel** — a web-based legal research and reference platform built for in-house legal teams. Circuitus provides practical guidance, transactional intelligence, and document management in a reading-optimized interface designed around how lawyers actually work.
+<p align="center">
+  <a href="https://circuitus.pages.dev"><img src="https://img.shields.io/badge/try_it-live-1a365d?style=flat-square&logo=cloudflare-pages&logoColor=white" alt="Live App" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square" alt="GPL-3.0" /></a>
+  <a href="https://github.com/foolish-bandit/Circuitus/stargazers"><img src="https://img.shields.io/github/stars/foolish-bandit/Circuitus?style=flat-square&color=c9a227" alt="Stars" /></a>
+</p>
 
-## What It Does
+<p align="center">
+  A web-based document reader, annotation system, and curated practice library<br/>
+  with legal-grade typography and a professional research interface.<br/><br/>
+  Everything runs in the browser. Nothing is uploaded. Nothing phones home.<br/><br/>
+  <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>K</kbd>
+</p>
 
-Circuitus is a single-page application that combines a document reader, annotation system, and curated legal reference library. Users can import their own documents (PDF, EPUB, plain text), browse pre-loaded practice guides covering topics like California contract law and data privacy compliance, and annotate everything with highlights and bookmarks — all persisted locally via IndexedDB.
+---
 
-The interface is modeled after professional legal research platforms: a left sidebar for document outline navigation, a center reading pane with legal typographic formatting, and a right sidebar surfacing related authorities and practice resources.
+## Features
 
-## Core Features
+<table>
+<tr>
+<td width="50%">
 
-### Multi-Document Workspace
-A tabbed interface lets users work across multiple documents simultaneously. Tabs can hold both uploaded files and built-in practice guides. Scroll positions are preserved per-tab, so switching between documents picks up exactly where you left off.
+**Document Reader**
 
-### Document Reader
-The reading pane renders content with legal-specific typography — justified serif text, section numbering (§ 1, § 2...), and automatic exhibit captioning for images. Font size cycles through three presets. Paragraph numbering can be toggled on for reference during review. An IntersectionObserver tracks the active chapter as the user scrolls, keeping the sidebar TOC in sync.
+- Import PDFs, EPUBs, and plain text
+- Legal typography — justified serif, section numbering (&#167;), exhibit captioning
+- Three font-size presets, toggleable paragraph numbering
+- Scroll position saved per document
+- Tabbed multi-document workspace
 
-### Text Annotation
-Selecting text surfaces a floating toolbar with three highlight colors (yellow, blue, green) and a bookmark button. Highlights are applied inline via `<mark>` elements. Both highlights and bookmarks are saved to IndexedDB with document and chapter context.
+</td>
+<td width="50%">
 
-### Built-In Legal Library
-Twelve pre-loaded practice guides and articles cover topics including:
-- Structuring Statements of Work under California law
+**Annotations**
+
+- Highlight text in three colors (yellow, blue, green)
+- Bookmark any passage
+- All annotations saved locally via IndexedDB
+- Organized by document and chapter
+- No account required, no cloud sync
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**Built-In Library**
+
+12 practice guides covering:
+- California contract law & SOW structuring
 - AI governance frameworks
 - CCPA/CPRA compliance (2026 update)
-- Vendor agreement negotiation
 - NDA drafting with technology carve-outs
-- Data processing agreement review
+- Vendor agreements & DPAs
 - Incident response planning
-- IP provisions in technology agreements
+- IP provisions in tech agreements
 
-Each document contains real statutory citations (Cal. Civ. Code, CCPA, CPRA, Cal. Lab. Code), case references, and practice tips. Content is structured with H2/H3 headings that the app parses into a navigable table of contents.
+Real statutory citations throughout.
 
-### Authorities Sidebar
-The right sidebar displays a randomized selection of related practice resources with type badges (guide, article, case) and flag indicators. A refresh button re-shuffles the selection. Clicking an authority opens it in the reader and adds a tab.
+</td>
+<td width="50%">
 
-### Panic Key
-`Ctrl+Shift+K` instantly switches the entire UI to display a specific practice guide (SOW Structuring), saving and later restoring the user's previous application state. The status bar indicates when quick-reference mode is active.
+**Research Interface**
 
-### Search
-The top bar includes a search field that queries the built-in document library by title, with results appearing in a dropdown. Selecting a result opens the document.
+- Left sidebar: navigable table of contents (auto-generated from headings)
+- Right sidebar: related authorities with type badges (guide, article, case)
+- Keyboard navigation between chapters
+- Full-text search across the library
+- Responsive layout — sidebars collapse gracefully
 
-### Keyboard Navigation
-Arrow keys navigate between chapters when not focused on an input field. The sidebar TOC highlights the current section in real time.
+</td>
+</tr>
+</table>
 
-### Responsive Layout
-Sidebars collapse automatically at viewport breakpoints — the left TOC hides below 1200px, the right authorities panel below 1400px — keeping the reading pane usable on smaller screens.
+---
+
+## Quick Reference Mode
+
+<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>K</kbd> instantly switches the entire UI to display a practice guide on SOW structuring. Your previous state is saved and restored when you press the shortcut again.
+
+The status bar indicates when quick-reference mode is active.
+
+---
+
+## Try It
+
+**Live at [circuitus.pages.dev](https://circuitus.pages.dev)**
+
+Or run locally:
+
+```bash
+git clone https://github.com/foolish-bandit/Circuitus.git
+cd Circuitus
+npm install
+npm run dev
+```
+
+No API keys. No backend. No accounts. Opens in your browser.
+
+---
 
 ## Architecture
 
-### Storage
-All data lives client-side in IndexedDB (`circuitus-db`) with three object stores: `documents` (uploaded files with reading positions), `highlights`, and `bookmarks`. No server-side persistence — the app runs entirely in the browser.
+```
+All data lives client-side.
+No server. No uploads. No tracking. No analytics.
+```
 
-### Document Processing
-- **PDF**: Parsed via pdf.js with spatial text extraction (Y/X positioning) and heading detection for chapter splitting
-- **EPUB**: Extracted via JSZip, with HTML content parsed from the OPF spine
-- **Plain text**: Split into chapters by blank-line heuristics
-- **Built-in guides**: Stored as HTML strings, parsed at runtime for H2/H3 headings to generate the sidebar TOC
+| Layer | Tech |
+|-------|------|
+| Frontend | React 19, TypeScript, Tailwind CSS |
+| Build | Vite |
+| Storage | IndexedDB (documents, highlights, bookmarks) |
+| PDF parsing | pdf.js (spatial text extraction, heading detection) |
+| EPUB parsing | JSZip (OPF spine extraction) |
+| Icons | Lucide React |
 
-### Reading State
-Scroll position is tracked with a 2-second debounce and saved per-document to IndexedDB. An IntersectionObserver with a `rootMargin` of `-10% 0px -80% 0px` detects which chapter heading is in the top portion of the viewport, driving the active chapter indicator in the sidebar.
+**Design:** Navy and gold color scheme. Libre Baskerville for document text, sans-serif for interface chrome. Styled to feel like a professional legal research platform.
 
-### Tech Stack
-- **React 19** with TypeScript
-- **Tailwind CSS** for styling
-- **Vite** for build tooling
-- **IndexedDB** (via `idb`) for local persistence
-- **pdf.js** and **JSZip** for document parsing
-- **Lucide React** for icons
+---
 
-### Design Language
-Navy and gold color scheme with a cream content background. Serif fonts (Libre Baskerville) for document headers and body text; sans-serif for interface chrome. Monospace for reference numbers. The visual language is intentionally formal — styled to feel like a professional legal research tool rather than a generic document viewer.
+## Contributing
+
+```bash
+npm install
+npm run dev       # dev server
+npm run build     # production build
+```
+
+PRs welcome — especially new practice guides, document format support, and annotation features.
+
+---
 
 ## License
 
 GPL-3.0
 
----
-
-Built by [Zack Brenner](https://github.com/foolish-bandit)
+<p align="center">
+  <sub>Built by <a href="https://github.com/foolish-bandit">Zack Brenner</a></sub>
+</p>
