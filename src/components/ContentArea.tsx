@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { FileText, Bookmark, Highlighter } from 'lucide-react';
 import type { DocumentChapter } from '@/types';
 
@@ -55,10 +55,11 @@ export default function ContentArea({
   const contentRef = useRef<HTMLDivElement>(null);
   const hasRestoredRef = useRef(false);
 
-  // Stable fallback ref number (generated once per mount)
-  const fallbackRefNumber = useMemo(
+  // Stable fallback ref number (generated once per mount).
+  // Math.random is impure, so we compute it inside a useState initializer
+  // rather than useMemo to satisfy the react-hooks/purity rule.
+  const [fallbackRefNumber] = useState(
     () => `CIR-2026-${String(Math.floor(Math.random() * 90000) + 10000)}`,
-    [],
   );
 
   // Selection toolbar state
