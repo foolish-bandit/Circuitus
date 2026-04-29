@@ -384,4 +384,161 @@
   .kicker, .smcp, .font-mono {
     font-feature-settings: "lnum", "kern";
   }
+
+  /* Audio seek-bar styling — hairline track with brass thumb */
+  .audio-seek {
+    -webkit-appearance: none;
+    appearance: none;
+    background: #D9D2C0;
+    height: 2px;
+    border-radius: 0;
+  }
+  .audio-seek::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 10px;
+    height: 14px;
+    background: #9C7A1F;
+    border: none;
+    border-radius: 0;
+    cursor: pointer;
+  }
+  .audio-seek::-moz-range-thumb {
+    width: 10px;
+    height: 14px;
+    background: #9C7A1F;
+    border: none;
+    border-radius: 0;
+    cursor: pointer;
+  }
+  .audio-seek:focus {
+    outline: none;
+  }
+  .audio-seek:focus::-webkit-slider-thumb {
+    box-shadow: 0 0 0 2px rgba(156, 122, 31, 0.4);
+  }
+}
+
+/* ── Print stylesheet ──────────────────────────────────────────────
+   Strip chrome and render the active document as a real brief.
+   Lawyers print constantly; this also doubles as a "Save as PDF"
+   export path via the OS print dialog. */
+@media print {
+  body {
+    background: #fff !important;
+    background-image: none !important;
+    color: #000 !important;
+  }
+
+  /* Hide every non-document chrome element. */
+  header,
+  aside,
+  .no-print,
+  [class*="StatusBar"],
+  [class*="Toolbar"],
+  [class*="MatterTabs"],
+  button {
+    display: none !important;
+  }
+
+  /* The reading container: full width, single column, paper-white. */
+  .max-w-reading-pane,
+  .max-w-reading-wide {
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0.4in 0.6in !important;
+    background: #fff !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Body prose. */
+  .prose-legal {
+    font-family: "Source Serif 4", Georgia, serif;
+    font-size: 11pt;
+    line-height: 1.55;
+    color: #000;
+    text-align: justify;
+  }
+
+  .prose-legal h1,
+  .prose-legal h2 {
+    font-size: 13pt;
+    color: #000 !important;
+    border-bottom: 0.5pt solid #000 !important;
+    margin-top: 18pt;
+    margin-bottom: 8pt;
+    page-break-after: avoid;
+    text-align: left;
+  }
+
+  .prose-legal h3 {
+    font-size: 12pt;
+    color: #000 !important;
+    margin-top: 14pt;
+    margin-bottom: 6pt;
+    page-break-after: avoid;
+  }
+
+  .prose-legal p, .prose-legal li {
+    page-break-inside: avoid;
+  }
+
+  /* Drop caps and brass underlines off in print. */
+  .prose-legal h2 + p::first-letter,
+  .prose-legal h1 + p::first-letter {
+    color: #000 !important;
+    font-style: normal;
+    float: none;
+    font-size: inherit;
+  }
+
+  .prose-legal a {
+    color: #000 !important;
+    text-decoration: underline;
+  }
+
+  .prose-legal blockquote {
+    border-left: 1pt solid #000 !important;
+    background: transparent !important;
+    margin: 8pt 12pt;
+    padding: 4pt 8pt;
+  }
+
+  /* Hide highlights but preserve underlying text. */
+  mark.highlight-yellow,
+  mark.highlight-blue,
+  mark.highlight-green {
+    background: transparent !important;
+    color: inherit !important;
+  }
+
+  /* Print-only header — pulled in via the reading container. */
+  .print-only {
+    display: block !important;
+  }
+
+  /* Page numbering via running counter. */
+  @page {
+    size: letter;
+    margin: 0.6in;
+    @bottom-center {
+      content: "— " counter(page) " —";
+      font-family: "Source Serif 4", Georgia, serif;
+      font-size: 9pt;
+      color: #444;
+    }
+    @top-right {
+      content: "CIRCUITUS";
+      font-family: "IBM Plex Sans", sans-serif;
+      font-size: 8pt;
+      letter-spacing: 0.18em;
+      color: #666;
+    }
+  }
+}
+
+/* Print-only elements default hidden in screen view. */
+.print-only {
+  display: none;
 }

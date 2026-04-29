@@ -1,11 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { Sparkles, X, Send, Loader2, ChevronDown } from 'lucide-react';
-import { onLoadProgress, streamReply, type ChatMessage } from '@/lib/llm';
+import { onLoadProgress, resetEngine, streamReply, type ChatMessage } from '@/lib/llm';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 import type { InitProgressReport } from '@mlc-ai/web-llm';
 
 interface AssistantPanelProps {
   open: boolean;
   onClose: () => void;
+  /** Optional callback that returns the active workspace context (open
+   * matter title, current draft excerpt, etc.) injected into the LLM's
+   * system prompt before each send. */
+  getContext?: () => string;
 }
 
 const SUGGESTED_PROMPTS: ReadonlyArray<string> = [
@@ -15,7 +20,7 @@ const SUGGESTED_PROMPTS: ReadonlyArray<string> = [
   'List the elements of a § 17200 unfair business practices claim.',
 ];
 
-export default function AssistantPanel({ open, onClose }: AssistantPanelProps) {
+export default function AssistantPanel({ open, onClose, getContext }: AssistantPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState(false);
@@ -23,6 +28,17 @@ export default function AssistantPanel({ open, onClose }: AssistantPanelProps) {
   const [modelReady, setModelReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLElement | null>(null);
+  useFocusTrap(open, panelRef);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [open, onClose]);
 
   useEffect(() => {
     return onLoadProgress((report) => {
@@ -50,7 +66,8 @@ export default function AssistantPanel({ open, onClose }: AssistantPanelProps) {
       let assistantText = '';
       // Push placeholder assistant message we'll mutate as tokens stream in
       setMessages((prev) => [...prev, { role: 'assistant', content: '' }]);
-      for await (const delta of streamReply(next)) {
+      const ctx = getContext?.();
+      for await (const delta of streamReply(next, ctx)) {
         assistantText += delta;
         setMessages((prev) => {
           const copy = [...prev];
@@ -91,6 +108,10 @@ export default function AssistantPanel({ open, onClose }: AssistantPanelProps) {
 
       {/* Panel */}
       <aside
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Circuitus Assistant"
         className={`fixed right-0 top-0 bottom-0 z-50 w-full sm:w-[460px] bg-paper-cool flex flex-col transition-transform ${
           open ? 'translate-x-0' : 'translate-x-full'
         }`}
@@ -202,10 +223,27 @@ export default function AssistantPanel({ open, onClose }: AssistantPanelProps) {
               className="bg-claret/5 px-3 py-2.5"
               style={{ border: '1px solid rgba(122, 30, 46, 0.3)' }}
             >
-              <span className="font-serif text-[12px] italic text-claret-dark">
+              <p className="font-serif text-[12px] italic text-claret-dark">
                 <span className="smcp not-italic mr-2">Notice —</span>
                 {error}
-              </span>
+              </p>
+              <button
+                onClick={() => {
+                  resetEngine();
+                  setError(null);
+                  setProgress(null);
+                  setModelReady(false);
+                  // Re-issue the last user message if there was one
+                  const lastUser = [...messages].reverse().find((m) => m.role === 'user');
+                  if (lastUser) {
+                    setMessages((prev) => prev.filter((m) => m !== lastUser));
+                    void send(lastUser.content);
+                  }
+                }}
+                className="mt-2 font-sans text-[10px] uppercase tracking-marque text-claret hover:text-claret-dark"
+              >
+                ↻ Retry
+              </button>
             </div>
           )}
         </div>

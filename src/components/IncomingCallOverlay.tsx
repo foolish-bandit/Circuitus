@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Phone, PhoneOff, MicOff, Mic, Video, VideoOff, X } from 'lucide-react';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 
 interface IncomingCallOverlayProps {
   /** When true, the overlay is visible. The overlay only mounts while visible
@@ -35,6 +36,16 @@ function OverlayBody({ onDismiss }: OverlayBodyProps) {
   const [video, setVideo] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [accepted, setAccepted] = useState(false);
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  useFocusTrap(true, dialogRef);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onDismiss();
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onDismiss]);
 
   useEffect(() => {
     if (!accepted) return;
@@ -53,6 +64,10 @@ function OverlayBody({ onDismiss }: OverlayBodyProps) {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-ink/90 backdrop-blur-sm">
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Incoming call"
         className="w-[440px] bg-paper relative"
         style={{
           border: '1px solid #9C7A1F',

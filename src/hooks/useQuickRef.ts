@@ -173,8 +173,10 @@ export function useQuickRef(): UseQuickRefReturn {
       if (isQuickRef) exitQuickRef();
       else enterQuickRef();
     };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
+    // Capture-phase so editors with their own keydown listeners (Tiptap,
+    // Monaco, contenteditable surfaces) don't swallow the chord first.
+    window.addEventListener('keydown', handler, { capture: true });
+    return () => window.removeEventListener('keydown', handler, { capture: true });
   }, [chord, isQuickRef, enterQuickRef, exitQuickRef]);
 
   useEffect(() => {

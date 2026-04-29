@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 
 interface ShortcutsOverlayProps {
   open: boolean;
@@ -18,6 +19,9 @@ interface Group {
 }
 
 export default function ShortcutsOverlay({ open, onClose, quickRefChord }: ShortcutsOverlayProps) {
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  useFocusTrap(open, dialogRef);
+
   useEffect(() => {
     if (!open) return;
     const handler = (e: KeyboardEvent) => {
@@ -60,6 +64,10 @@ export default function ShortcutsOverlay({ open, onClose, quickRefChord }: Short
       onClick={onClose}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="shortcuts-overlay-title"
         className="bg-paper max-w-[560px] w-full max-h-[80vh] overflow-y-auto"
         style={{
           border: '1px solid #9C7A1F',
@@ -75,7 +83,7 @@ export default function ShortcutsOverlay({ open, onClose, quickRefChord }: Short
         >
           <div>
             <p className="kicker-brass">Reference</p>
-            <p className="font-display text-[18px] text-ink leading-none mt-1">
+            <p id="shortcuts-overlay-title" className="font-display text-[18px] text-ink leading-none mt-1">
               Keyboard Shortcuts
             </p>
           </div>
