@@ -27,6 +27,12 @@ const FILE_ICONS: Record<string, typeof BookOpen> = {
   txt: FileType,
 };
 
+const TYPE_LABEL: Record<string, string> = {
+  epub: 'EPUB',
+  pdf: 'PDF',
+  txt: 'Plain Text',
+};
+
 export default function LibraryPage({ onOpenDocument, onImport, refreshKey = 0 }: LibraryPageProps) {
   const [documents, setDocuments] = useState<StoredDocument[]>([]);
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
@@ -43,45 +49,70 @@ export default function LibraryPage({ onOpenDocument, onImport, refreshKey = 0 }
 
   if (documents.length === 0) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center py-20">
-        <FileText className="w-16 h-16 text-border mb-4" />
-        <h3 className="font-serif text-navy text-lg mb-2">No active matters</h3>
-        <p className="text-sm font-sans text-text-muted mb-6">
-          Import a document to begin your research.
-        </p>
-        <button
-          onClick={onImport}
-          className="flex items-center gap-2 bg-navy text-white text-sm font-sans font-medium px-5 py-2.5 rounded hover:bg-navy-light transition-colors"
-        >
-          <Upload className="w-4 h-4" />
-          Import New Source
-        </button>
+      <div className="flex-1 flex flex-col items-center justify-center py-20 px-8">
+        <div className="text-center max-w-md">
+          <p className="kicker-brass mb-4">
+            <span className="inline-block w-6 h-px bg-brass align-middle mr-3" />
+            The Working Brief
+            <span className="inline-block w-6 h-px bg-brass align-middle ml-3" />
+          </p>
+          <h2 className="font-display text-3xl font-semibold text-ink leading-tight mb-3">
+            No active matters.
+          </h2>
+          <p className="font-serif italic text-[14px] text-ink-muted leading-relaxed mb-8">
+            Begin your session by importing a source document, or open a Saved Authority from
+            the right rail to load a practice guide.
+          </p>
+          <button
+            onClick={onImport}
+            className="inline-flex items-center gap-2 bg-navy text-paper font-sans uppercase tracking-marque text-[11px] font-medium px-5 py-3 hover:bg-navy-dark transition-colors"
+            style={{
+              borderRadius: 0,
+              border: '1px solid #0A1F3D',
+              boxShadow: 'inset 0 0 0 1px rgba(184, 147, 43, 0.25)',
+            }}
+          >
+            <Upload className="w-3.5 h-3.5" />
+            Import a Source
+          </button>
+          <div className="asterism mt-12" aria-hidden />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 overflow-y-auto px-8 py-6">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="font-serif text-navy text-xl">Your Matters</h2>
-            <p className="text-xs font-sans text-text-muted mt-1">
-              Active research documents and imported sources
-            </p>
+    <div className="flex-1 overflow-y-auto px-10 py-8">
+      <div className="max-w-5xl mx-auto">
+        {/* Editorial masthead */}
+        <header className="mb-10 pb-5" style={{ borderBottom: '1px solid #D9D2C0' }}>
+          <div className="flex items-end justify-between gap-6">
+            <div>
+              <p className="kicker-brass mb-2">The Working Brief</p>
+              <h1 className="font-display text-[34px] font-semibold text-ink leading-none tracking-tight">
+                Your Matters
+              </h1>
+              <p className="font-serif italic text-[13px] text-ink-muted mt-2">
+                Active research documents and imported sources, in chambers.
+              </p>
+            </div>
+            <button
+              onClick={onImport}
+              className="flex-shrink-0 inline-flex items-center gap-2 bg-navy text-paper font-sans uppercase tracking-marque text-[10.5px] font-medium px-4 py-2.5 hover:bg-navy-dark transition-colors"
+              style={{
+                borderRadius: 0,
+                border: '1px solid #0A1F3D',
+                boxShadow: 'inset 0 0 0 1px rgba(184, 147, 43, 0.22)',
+              }}
+            >
+              <Upload className="w-3 h-3" />
+              Import Source
+            </button>
           </div>
-          <button
-            onClick={onImport}
-            className="flex items-center gap-1.5 bg-navy text-white text-xs font-sans font-medium px-4 py-2 rounded hover:bg-navy-light transition-colors"
-          >
-            <Upload className="w-3.5 h-3.5" />
-            Import New Source
-          </button>
-        </div>
+        </header>
 
         {/* Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-rule">
           {documents.map((doc) => {
             const Icon = FILE_ICONS[doc.fileType] || FileText;
             const matterNum = doc.id.slice(0, 4).toUpperCase();
@@ -99,12 +130,17 @@ export default function LibraryPage({ onOpenDocument, onImport, refreshKey = 0 }
             return (
               <div
                 key={doc.id}
-                className="bg-white border border-border rounded-lg hover:border-gold/30 hover:shadow-md transition-all cursor-pointer group relative"
+                className="bg-paper-cool hover:bg-paper transition-colors cursor-pointer group relative"
                 onClick={() => onOpenDocument(doc.id)}
               >
-                <div className="p-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <Icon className="w-5 h-5 text-navy/40 flex-shrink-0 mt-0.5" />
+                <div className="p-5 h-full flex flex-col">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <Icon className="w-4 h-4 text-brass-dim flex-shrink-0" />
+                      <span className="kicker text-brass-dim">
+                        {TYPE_LABEL[doc.fileType] ?? 'Source'}
+                      </span>
+                    </div>
                     <div className="relative">
                       <button
                         onClick={(e) => {
@@ -112,57 +148,69 @@ export default function LibraryPage({ onOpenDocument, onImport, refreshKey = 0 }
                           setMenuOpen(menuOpen === doc.id ? null : doc.id);
                         }}
                         aria-label="Document options"
-                        className="p-1 text-text-muted hover:text-text-main rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="p-1 text-ink-muted hover:text-ink opacity-0 group-hover:opacity-100 transition-opacity"
                       >
                         <MoreVertical className="w-3.5 h-3.5" />
                       </button>
                       {menuOpen === doc.id && (
-                        <div className="absolute right-0 top-full mt-1 bg-white border border-border rounded shadow-lg z-10 py-1 min-w-[120px]">
+                        <div
+                          className="absolute right-0 top-full mt-1 bg-paper z-10 py-1 min-w-[140px]"
+                          style={{
+                            border: '1px solid #D9D2C0',
+                            boxShadow: '0 8px 24px -8px rgba(14,17,22,0.18)',
+                          }}
+                        >
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               onOpenDocument(doc.id);
                             }}
-                            className="w-full text-left px-3 py-1.5 text-xs font-sans hover:bg-cream transition-colors"
+                            className="w-full text-left px-3 py-1.5 text-[11px] font-sans hover:bg-paper-warm transition-colors"
                           >
-                            Open
+                            Open Matter
                           </button>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               handleDelete(doc.id);
                             }}
-                            className="w-full text-left px-3 py-1.5 text-xs font-sans text-red-600 hover:bg-red-50 transition-colors flex items-center gap-1.5"
+                            className="w-full text-left px-3 py-1.5 text-[11px] font-sans text-claret hover:bg-claret/5 transition-colors flex items-center gap-1.5"
                           >
                             <Trash2 className="w-3 h-3" />
-                            Delete
+                            Withdraw
                           </button>
                         </div>
                       )}
                     </div>
                   </div>
 
-                  <h3 className="font-serif text-sm text-navy font-bold leading-snug mb-1 line-clamp-2">
+                  <h3 className="font-display text-[16px] text-ink font-semibold leading-snug mb-2 line-clamp-2 flex-1">
                     {doc.title}
                   </h3>
-                  <p className="text-[10px] font-sans text-text-muted mb-2">
+
+                  <p className="font-serif italic text-[11px] text-ink-muted mb-3 line-clamp-1">
                     Imported {timeAgo(doc.dateAdded)}
                     {doc.lastOpened !== doc.dateAdded && (
-                      <> &middot; Last reviewed {timeAgo(doc.lastOpened)}</>
+                      <> · last reviewed {timeAgo(doc.lastOpened)}</>
                     )}
                   </p>
 
-                  {/* Progress bar */}
-                  <div className="w-full h-1 bg-border/50 rounded-full mb-2">
-                    <div
-                      className="h-full bg-gold/60 rounded-full transition-all"
-                      style={{ width: `${progress}%` }}
-                    />
+                  <div className="mt-auto">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="flex-1 h-px bg-rule">
+                        <div
+                          className="h-px bg-brass transition-all"
+                          style={{ width: `${progress}%` }}
+                        />
+                      </div>
+                      <span className="font-mono text-[9px] text-ink-muted/70 w-8 text-right">
+                        {progress}%
+                      </span>
+                    </div>
+                    <p className="font-mono text-[9px] text-ink-muted/60 tracking-wider">
+                      Matter № CIR-{matterNum}
+                    </p>
                   </div>
-
-                  <p className="font-mono text-[9px] text-text-muted/60">
-                    Matter CIR-{matterNum}
-                  </p>
                 </div>
               </div>
             );

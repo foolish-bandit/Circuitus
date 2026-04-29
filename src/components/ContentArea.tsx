@@ -242,35 +242,51 @@ export default function ContentArea({
   return (
     <div
       ref={effectiveScrollRef}
-      className="flex-1 overflow-y-auto bg-cream relative min-w-[600px]"
+      className="flex-1 overflow-y-auto bg-paper relative min-w-[600px]"
       onMouseUp={handleMouseUp}
     >
-      <div className="max-w-reading-pane mx-auto bg-white min-h-full border-x border-border/50 shadow-sm px-12 py-10">
-        {/* Legal header */}
-        <div className="text-center mb-8 pb-6 border-b border-border">
-          <p className="text-[10px] font-serif uppercase tracking-[0.2em] text-navy/60 mb-1">
-            CIRCUITUS PRACTICE RESOURCE
+      <div
+        className="max-w-reading-pane mx-auto bg-paper-cool min-h-full px-14 py-14 relative"
+        style={{
+          borderLeft: '1px solid #D9D2C0',
+          borderRight: '1px solid #D9D2C0',
+          boxShadow: '0 0 0 1px rgba(14,17,22,0.02), 0 8px 32px -24px rgba(14,17,22,0.18)',
+        }}
+      >
+        {/* Editorial document header */}
+        <header className="text-center mb-10">
+          <p className="kicker-brass mb-3">
+            <span className="inline-block w-6 h-px bg-brass align-middle mr-3" />
+            Circuitus Practice Resource
+            <span className="inline-block w-6 h-px bg-brass align-middle ml-3" />
           </p>
-          {documentTitle && (
-            <h1 className="font-serif text-lg font-bold text-navy mt-2 mb-2 leading-snug">
+
+          {documentTitle ? (
+            <h1 className="font-display text-[26px] font-semibold text-ink leading-[1.15] mt-2 mb-3 tracking-tight px-4">
               {documentTitle}
             </h1>
-          )}
-          {!documentTitle && (
-            <p className="text-xs font-sans text-text-muted mb-2">
+          ) : (
+            <p className="font-serif italic text-ink-muted text-sm mb-3">
               In-House Counsel Reference Library — Transactional Division
             </p>
           )}
-          <p className="font-mono text-[10px] text-text-muted tracking-wider">
-            Ref. {refNumber || fallbackRefNumber}
-          </p>
-        </div>
+
+          <div className="flex items-center justify-center gap-3 mt-4">
+            <span className="h-px w-16 bg-rule" aria-hidden />
+            <p className="font-mono text-[10px] text-ink-muted tracking-marque">
+              Ref. {refNumber || fallbackRefNumber}
+            </p>
+            <span className="h-px w-16 bg-rule" aria-hidden />
+          </div>
+
+          <div className="asterism mt-7 mb-0" aria-hidden />
+        </header>
 
         {/* Content */}
         {!hasContent ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <FileText className="w-12 h-12 text-border mb-4" />
-            <p className="text-sm font-sans text-text-muted max-w-sm leading-relaxed">
+            <FileText className="w-10 h-10 text-rule-strong mb-5" />
+            <p className="font-serif italic text-ink-muted max-w-sm leading-relaxed text-[14px]">
               No source documents loaded. Import a document or select a Saved Authority to begin.
             </p>
           </div>
@@ -281,16 +297,24 @@ export default function ContentArea({
 
             {/* Chapters rendered sequentially */}
             {chapters?.map((ch, i) => (
-              <div key={ch.id} id={`chapter-${i}`} data-chapter-index={i} className="mb-10">
-                <h2 className="font-serif text-navy font-bold text-lg border-b border-border pb-2 mb-4">
-                  &sect; {i + 1}. {ch.title}
-                </h2>
+              <section key={ch.id} id={`chapter-${i}`} data-chapter-index={i} className="mb-12">
+                <div className="mb-5">
+                  <p className="kicker text-brass-dim mb-1.5">
+                    Section {String.fromCharCode(8544 + i)}
+                  </p>
+                  <h2
+                    className="font-display text-ink font-semibold text-[20px] leading-tight pb-3"
+                    style={{ borderBottom: '1px solid #D9D2C0' }}
+                  >
+                    {ch.title}
+                  </h2>
+                </div>
                 <div
                   className={`prose-legal ${showParagraphNumbers ? 'numbered' : ''}`}
-                  style={{ fontSize: `${fontSize}px`, lineHeight: '1.85' }}
+                  style={{ fontSize: `${fontSize}px`, lineHeight: '1.78' }}
                   dangerouslySetInnerHTML={{ __html: ch.content }}
                 />
-              </div>
+              </section>
             ))}
 
             {/* Raw HTML content (standin documents) */}
@@ -310,35 +334,39 @@ export default function ContentArea({
         <div
           role="toolbar"
           aria-label="Text annotation"
-          className="absolute z-50 flex items-center gap-1 bg-navy rounded-lg shadow-lg px-2 py-1.5 -translate-x-1/2"
+          className="absolute z-50 flex items-center gap-1 bg-navy px-2.5 py-2 -translate-x-1/2"
           style={{
             left: selectionToolbar.x,
             top: selectionToolbar.y,
             transform: 'translate(-50%, -100%)',
+            borderRadius: 0,
+            border: '1px solid rgba(184, 147, 43, 0.4)',
+            boxShadow:
+              'inset 0 0 0 1px rgba(184, 147, 43, 0.15), 0 8px 24px -8px rgba(14,17,22,0.45)',
           }}
         >
           {/* Highlight buttons */}
-          <div className="flex items-center gap-0.5 mr-1">
-            <Highlighter className="w-3 h-3 text-white/60 mr-1" />
+          <div className="flex items-center gap-1 mr-1">
+            <Highlighter className="w-3 h-3 text-brass-bright mr-1" />
             {HIGHLIGHT_COLORS.map((h) => (
               <button
                 key={h.color}
                 onClick={() => handleHighlight(h.color)}
-                className={`w-5 h-5 rounded-full ${h.bg} hover:ring-2 hover:ring-white/50 transition-all`}
+                className={`w-4 h-4 ${h.bg} hover:ring-2 hover:ring-brass-bright/60 transition-all`}
+                style={{ borderRadius: 0 }}
                 title={`Highlight ${h.label}`}
               />
             ))}
           </div>
 
-          <div className="w-px h-4 bg-white/20 mx-1" />
+          <div className="w-px h-4 bg-paper/20 mx-1" />
 
           {/* Bookmark button */}
           <button
             onClick={handleBookmark}
-            className="flex items-center gap-1 text-white/80 hover:text-white text-[10px] font-sans px-1.5 py-0.5 rounded hover:bg-white/10 transition-colors"
+            className="flex items-center gap-1 text-paper/80 hover:text-brass-bright font-sans uppercase tracking-marque text-[9px] px-1.5 py-0.5 transition-colors"
           >
-            <Bookmark className="w-3 h-3" />
-            Add Marker
+            <Bookmark className="w-3 h-3" /> Mark
           </button>
         </div>
       )}

@@ -5,10 +5,6 @@ interface StatusBarProps {
   shortcutHint?: string;
 }
 
-/**
- * Cycling sync indicator: drift up minute-by-minute, then occasionally
- * snap back to 0–2 to mimic a successful background poll.
- */
 function useSyncMinutes(): number {
   const [minutes, setMinutes] = useState(() => Math.floor(Math.random() * 4) + 1);
 
@@ -30,29 +26,39 @@ export default function StatusBar({ isQuickRef = false, shortcutHint }: StatusBa
   const minutes = useSyncMinutes();
 
   return (
-    <div className="bg-white border-t border-border flex items-center justify-between px-4 h-6 flex-shrink-0">
-      <div className="flex items-center gap-1.5">
+    <div
+      className="bg-paper-cool flex items-center justify-between px-5 h-[26px] flex-shrink-0"
+      style={{ borderTop: '1px solid #D9D2C0' }}
+    >
+      {/* Left — connection state */}
+      <div className="flex items-center gap-2">
         <span
-          className={`w-1.5 h-1.5 rounded-full ${
-            isQuickRef ? 'bg-blue-500' : 'bg-green-500'
-          }`}
-        />
-        <span className="text-[10px] font-sans text-text-muted">
-          {isQuickRef ? 'Quick Reference Mode' : 'Connected to Circuitus Library'}
+          aria-hidden
+          className={`inline-block ${isQuickRef ? 'text-navy' : 'text-brass-dim'}`}
+          style={{ fontSize: 9, lineHeight: 1 }}
+        >
+          ◆
+        </span>
+        <span className="font-sans text-[10px] tracking-marque uppercase text-ink-muted">
+          {isQuickRef ? 'Quick Reference' : 'Connected · Circuitus Library'}
         </span>
       </div>
 
-      <span className="text-[10px] font-sans text-text-muted">
+      {/* Center — sync */}
+      <span className="font-mono text-[10px] text-ink-muted/80">
         {minutes === 0 ? 'Synced just now' : `Last synced ${minutes} min ago`}
       </span>
 
-      <div className="flex items-center gap-3">
+      {/* Right — shortcut + version */}
+      <div className="flex items-center gap-4">
         {shortcutHint && (
-          <span className="text-[10px] font-mono text-text-muted/60">
-            {shortcutHint}: Quick Reference
+          <span className="font-mono text-[10px] text-ink-muted/70">
+            <span className="text-brass-dim">⌨</span>{' '}
+            {shortcutHint}
+            <span className="text-ink-muted/40 ml-1">— Quick Reference</span>
           </span>
         )}
-        <span className="text-[10px] font-mono text-text-muted/40">v2.5.0</span>
+        <span className="font-mono text-[10px] text-ink-muted/40">v.2.6.0</span>
       </div>
     </div>
   );

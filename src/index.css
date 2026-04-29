@@ -8,72 +8,134 @@
   }
 
   body {
-    @apply bg-cream font-sans text-text-main antialiased;
+    @apply bg-paper font-sans text-ink antialiased;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.025 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    text-rendering: geometricPrecision;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   * {
     @apply box-border;
   }
+
+  /* Editorial typographic defaults — old-style figures, ligatures */
+  .font-serif, .font-display {
+    font-feature-settings: "onum", "liga", "kern", "calt";
+  }
+
+  /* Selection highlight — brass tinted */
+  ::selection {
+    background: rgba(156, 122, 31, 0.22);
+    color: #0E1116;
+  }
 }
 
 @layer components {
+  /* ── Editorial prose ─────────────────────────────────────────────── */
   .prose-legal {
-    @apply font-serif text-text-main;
+    @apply font-serif text-ink;
     text-align: justify;
+    hyphens: auto;
+    -webkit-hyphens: auto;
   }
 
   .prose-legal p {
-    @apply mb-4 leading-[1.85];
+    @apply mb-4 leading-[1.78];
   }
 
   .prose-legal h1,
   .prose-legal h2 {
-    @apply font-serif font-bold text-navy mt-8 mb-3;
+    @apply font-display font-semibold text-navy mt-10 mb-4;
+    letter-spacing: -0.005em;
   }
 
   .prose-legal h1 {
-    @apply text-xl;
+    @apply text-2xl;
   }
 
   .prose-legal h2 {
-    @apply text-lg border-b border-border pb-2;
+    @apply text-lg pb-2;
+    border-bottom: 1px solid #D9D2C0;
+    text-align: left;
   }
 
   .prose-legal h3 {
-    @apply font-serif font-bold text-navy text-base mt-6 mb-2;
+    @apply font-display font-semibold text-navy text-base mt-6 mb-2;
+    text-align: left;
   }
 
   .prose-legal ul,
   .prose-legal ol {
     @apply ml-6 mb-4 space-y-1;
+    text-align: left;
   }
 
-  .prose-legal ul {
-    @apply list-disc;
-  }
-
-  .prose-legal ol {
-    @apply list-decimal;
-  }
+  .prose-legal ul { @apply list-disc; }
+  .prose-legal ol { @apply list-decimal; }
 
   .prose-legal li {
     @apply leading-[1.7];
+    text-align: left;
   }
 
   .prose-legal blockquote {
-    @apply border-l-4 border-gold/40 pl-4 py-2 my-4 bg-gold/5 italic;
+    @apply pl-5 py-2 my-5 italic text-ink-soft;
+    border-left: 2px solid #9C7A1F;
+    background: rgba(156, 122, 31, 0.04);
+    text-align: left;
   }
 
-  .prose-legal em {
-    @apply italic;
+  .prose-legal blockquote strong {
+    @apply not-italic text-navy;
+    font-feature-settings: "smcp";
+    letter-spacing: 0.04em;
   }
 
-  .prose-legal strong {
-    @apply font-bold;
+  .prose-legal em { @apply italic; }
+  .prose-legal strong { @apply font-semibold; }
+
+  .prose-legal a {
+    @apply text-navy;
+    text-decoration: underline;
+    text-decoration-color: #9C7A1F;
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
   }
 
   .prose-legal img {
-    @apply max-w-full h-auto my-4 border border-border/60 rounded shadow-sm;
+    @apply max-w-full h-auto my-4;
+    border: 1px solid #D9D2C0;
+  }
+
+  /* Drop cap on the very first paragraph following a header */
+  .prose-legal h2 + p::first-letter,
+  .prose-legal h1 + p::first-letter {
+    @apply font-display font-semibold;
+    font-size: 4.4em;
+    line-height: 0.86;
+    float: left;
+    margin: 0.06em 0.08em 0 0;
+    color: #9C7A1F;
+    font-style: italic;
+  }
+
+  /* Asterism — section break ornament */
+  .prose-legal hr,
+  .asterism {
+    border: none;
+    text-align: center;
+    margin: 2.5rem 0;
+    font-family: "Source Serif 4", Georgia, serif;
+    color: #B5AB95;
+    line-height: 1;
+  }
+
+  .prose-legal hr::before,
+  .asterism::before {
+    content: "⁂";
+    font-size: 1.25rem;
+    letter-spacing: 0.4em;
   }
 
   /* Exhibit figures (images with captions) */
@@ -82,30 +144,33 @@
   }
 
   .exhibit-figure img {
-    @apply mx-auto border border-border/60 rounded shadow-sm;
+    @apply mx-auto;
+    border: 1px solid #D9D2C0;
   }
 
   .exhibit-caption {
-    @apply text-[10px] font-sans font-semibold uppercase tracking-[0.15em] text-text-muted mt-2;
+    @apply text-[10px] font-sans font-semibold uppercase mt-2 text-ink-muted;
+    letter-spacing: 0.18em;
   }
 
+  /* Extracted provisions — code blocks restyled */
   .prose-legal pre,
   .prose-legal code {
-    @apply font-mono text-sm;
+    @apply font-mono text-[13px];
   }
 
-  /* Extracted provisions — code blocks restyled with gold left border */
   .prose-legal pre {
-    @apply bg-cream border-l-4 border-gold p-4 my-4 overflow-x-auto rounded-r relative;
+    @apply bg-paper-cool p-4 my-4 overflow-x-auto relative;
+    border-left: 3px solid #9C7A1F;
+    border-top: 1px solid #D9D2C0;
+    border-right: 1px solid #D9D2C0;
+    border-bottom: 1px solid #D9D2C0;
   }
 
   .prose-legal pre::before {
     content: 'Extracted Provision';
-    @apply text-[9px] font-sans font-semibold uppercase tracking-[0.15em] text-gold-dim block mb-2;
-  }
-
-  .prose-legal a {
-    @apply text-blue-700 underline;
+    @apply text-[9px] font-sans font-semibold uppercase text-brass-dim block mb-2;
+    letter-spacing: 0.18em;
   }
 
   /* Paragraph numbering */
@@ -123,58 +188,122 @@
     content: counter(paragraph);
     position: absolute;
     left: 0;
-    @apply text-[10px] font-mono text-text-muted/40 mt-1;
+    top: 0.4em;
+    @apply text-[10px] font-mono text-ink-muted/50;
   }
 
-  /* Text highlight marks */
+  /* Highlight marks */
   mark.highlight-yellow {
-    @apply bg-yellow-200/70 rounded-sm px-0.5;
+    background: rgba(229, 195, 90, 0.42);
+    color: inherit;
+    padding: 0 2px;
   }
-
   mark.highlight-blue {
-    @apply bg-blue-200/70 rounded-sm px-0.5;
+    background: rgba(66, 109, 175, 0.28);
+    color: inherit;
+    padding: 0 2px;
   }
-
   mark.highlight-green {
-    @apply bg-green-200/70 rounded-sm px-0.5;
+    background: rgba(95, 145, 95, 0.28);
+    color: inherit;
+    padding: 0 2px;
   }
 
-  /* Tiptap editor styling */
+  /* ── Editorial utilities ─────────────────────────────────────────── */
+
+  /* Small caps — proper, with font-feature when supported */
+  .smcp {
+    font-variant-caps: all-small-caps;
+    letter-spacing: 0.08em;
+  }
+
+  /* Hairline rules — 1px crisp instead of Tailwind's default */
+  .rule-h {
+    height: 1px;
+    background: #D9D2C0;
+    border: 0;
+  }
+
+  .rule-double {
+    height: 5px;
+    background:
+      linear-gradient(to bottom,
+        #9C7A1F 0,
+        #9C7A1F 2px,
+        transparent 2px,
+        transparent 4px,
+        #0E1116 4px,
+        #0E1116 5px);
+  }
+
+  /* Stamped "PRIVILEGED" watermark */
+  .stamp-privileged {
+    @apply font-sans font-semibold uppercase tracking-[0.28em] text-claret;
+    border: 2px solid currentColor;
+    padding: 4px 10px;
+    transform: rotate(-3deg);
+    display: inline-block;
+    font-size: 9px;
+    line-height: 1;
+    opacity: 0.85;
+  }
+
+  /* Editorial "kicker" — masthead caps */
+  .kicker {
+    @apply font-sans font-semibold uppercase text-ink-muted;
+    letter-spacing: 0.22em;
+    font-size: 9.5px;
+  }
+
+  .kicker-brass {
+    @apply font-sans font-semibold uppercase text-brass;
+    letter-spacing: 0.22em;
+    font-size: 9.5px;
+  }
+
+  /* Marginalia — pulled into the gutter on wide screens */
+  .marginalia {
+    @apply font-mono text-[10px] text-ink-muted/70;
+  }
+
+  /* ── Tiptap editor styling ───────────────────────────────────────── */
   .tiptap-editor .ProseMirror {
     @apply outline-none min-h-[60vh] font-serif;
-    font-size: 14.5px;
-    line-height: 1.85;
+    font-size: 15px;
+    line-height: 1.78;
+    font-feature-settings: "onum", "liga", "kern";
   }
 
   .tiptap-editor .ProseMirror p.is-editor-empty:first-child::before {
     content: attr(data-placeholder);
-    @apply text-text-muted/50 float-left h-0 pointer-events-none;
+    @apply text-ink-muted/50 float-left h-0 pointer-events-none italic;
   }
 
   .tiptap-editor .ProseMirror h1,
   .tiptap-editor .ProseMirror h2,
   .tiptap-editor .ProseMirror h3 {
-    @apply font-serif font-bold text-navy;
+    @apply font-display font-semibold text-navy;
+    letter-spacing: -0.005em;
   }
 
   .tiptap-editor .ProseMirror h2 {
-    @apply text-lg border-b border-border pb-2 mt-8 mb-3;
+    @apply text-lg pb-2 mt-8 mb-3;
+    border-bottom: 1px solid #D9D2C0;
   }
 
-  .tiptap-editor .ProseMirror p {
-    @apply mb-4;
-  }
+  .tiptap-editor .ProseMirror p { @apply mb-4; }
 
   .tiptap-editor .ProseMirror ul,
   .tiptap-editor .ProseMirror ol {
     @apply ml-6 mb-4;
   }
-
   .tiptap-editor .ProseMirror ul { @apply list-disc; }
   .tiptap-editor .ProseMirror ol { @apply list-decimal; }
 
   .tiptap-editor .ProseMirror blockquote {
-    @apply border-l-4 border-gold/40 pl-4 py-2 my-4 bg-gold/5 italic;
+    @apply pl-5 py-2 my-4 italic text-ink-soft;
+    border-left: 2px solid #9C7A1F;
+    background: rgba(156, 122, 31, 0.04);
   }
 
   /* Focus mode — dim non-active paragraphs */
