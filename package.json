@@ -1,14 +1,14 @@
 {
   "name": "circuitus",
   "private": true,
-  "version": "2.4.1",
+  "version": "2.5.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "postinstall": "node -e \"const fs=require('fs');const src='node_modules/pdfjs-dist/build/pdf.worker.min.js';const dst='public/pdf.worker.min.js';if(fs.existsSync(src)){fs.mkdirSync('public',{recursive:true});fs.copyFileSync(src,dst);console.log('Copied PDF.js worker');}else{console.log('pdfjs-dist worker not found, skipping copy');}\""
+    "postinstall": "node scripts/copy-pdf-worker.mjs"
   },
   "dependencies": {
     "idb": "^8.0.0",

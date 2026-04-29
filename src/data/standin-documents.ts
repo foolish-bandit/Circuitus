@@ -548,4 +548,107 @@ export const standinDocuments: StandinDocument[] = [
 <blockquote>Practice Tip: Negotiate IP indemnification caps separately from general liability caps. IP infringement claims can generate outsized exposure relative to the agreement's overall value, and collapsing them under a general cap may leave the customer inadequately protected.</blockquote>`,
     flagStatus: null,
   },
+  {
+    id: 'guide-force-majeure',
+    type: 'guide',
+    title: 'Force Majeure in SaaS and Services Agreements',
+    shortTitle: 'Force Majeure',
+    description: 'Drafting and interpreting force majeure clauses in technology contracts post-2020, with attention to pandemic precedent and supply-chain disruption.',
+    refNumber: 'CIR-PG-2026-010',
+    lastUpdated: 'Feb 2026',
+    content: `<h2>The Modern Force Majeure Clause</h2>
+<p>Force majeure provisions excuse performance when an extraordinary event beyond a party's reasonable control prevents performance. The pandemic-era jurisprudence has reshaped how counsel draft and litigate these clauses. Generic boilerplate that does not enumerate epidemic, governmental order, or supply-chain disruption often fails to provide the protection the parties expected. Modern California cases such as <em>SVB Financial Group v. UMB Bank, N.A.</em> illustrate that courts continue to read force majeure clauses narrowly against the party invoking them.</p>
+<p>An effective clause should: (a) enumerate categories with specificity but include a residual catch-all tied to events of comparable severity; (b) require prompt written notice with specifics about expected duration; (c) impose a duty to mitigate; and (d) provide a termination right if the event extends beyond a defined period (typically 30 to 90 days).</p>
+<h2>Pandemic and Public-Health Events</h2>
+<p>Post-2020 drafting should address pandemic and public-health emergencies expressly. Many pre-2020 clauses excluded "epidemic" or "quarantine" language, leaving counsel to argue analogously. Cal. Civ. Code § 1511 codifies the common-law rule that performance is excused when prevented or delayed by an irresistible, superhuman cause. Section 1511(2) — "by the operation of law" — has been the most-invoked subsection in recent litigation, particularly where governmental shutdown orders prevented performance.</p>
+<blockquote>Practice Tip: Draft the notice provision so that failure to give timely notice is a breach of the force majeure clause itself, not merely a forfeiture of the excuse. This gives the non-affected party leverage to negotiate accommodations rather than face an unconditional non-performance.</blockquote>
+<h2>Supply-Chain and Vendor-Specific Risks</h2>
+<p>For technology vendors with complex supply chains, force majeure should expressly address upstream supplier failures, semiconductor shortages, and cloud-provider outages. Without enumeration, counsel for the customer will argue that supply-chain risk is a foreseeable cost of doing business and therefore not "beyond the reasonable control" of a sophisticated vendor.</p>
+<p>Customers should resist clauses that excuse performance for any vendor-side supply-chain issue without further qualification. A balanced compromise: the vendor must use commercially reasonable efforts to identify alternative suppliers and provide written status updates at defined intervals (e.g., every 14 days) during the affected period.</p>
+<h2>Termination Rights and Damages</h2>
+<p>The most heavily negotiated element of a modern force majeure clause is the termination right. Customers want a short window (15 to 30 days) before they can terminate without penalty; vendors want a longer window (60 to 120 days) and a continued payment obligation during the affected period for fixed-cost recovery. The compromise position typically provides a 30 to 60 day excuse window with prorated fee abatement, escalating to a unilateral termination right with prepaid-fee refund after 90 days.</p>`,
+    flagStatus: null,
+  },
+  {
+    id: 'guide-export-control',
+    type: 'guide',
+    title: 'Export Control and Sanctions Diligence for Technology Counsel',
+    shortTitle: 'Export Controls',
+    description: 'EAR, OFAC, and ITAR considerations for technology agreements with international counterparties or dual-use components.',
+    refNumber: 'CIR-PG-2026-011',
+    lastUpdated: 'Apr 2026',
+    content: `<h2>Threshold Diligence in Cross-Border Transactions</h2>
+<p>Export-control diligence is no longer the exclusive province of aerospace and defense practitioners. The Bureau of Industry and Security has steadily expanded the Export Administration Regulations (EAR) to cover semiconductors, advanced computing, and AI-enabled software. Counsel reviewing any technology agreement with a non-U.S. counterparty must perform threshold diligence to determine whether the transaction implicates the EAR (15 C.F.R. Parts 730–774), the International Traffic in Arms Regulations (22 C.F.R. Parts 120–130), or the sanctions programs administered by OFAC (31 C.F.R. Chapter V).</p>
+<p>The threshold inquiry begins with three questions: (1) what is being exported, (2) where is it going, and (3) who is the end user. Each question maps to a different regulatory framework and a different set of license or screening obligations.</p>
+<h2>Restricted Party Screening</h2>
+<p>Every counterparty — and, in technology transactions, every named recipient of the technology — should be screened against the consolidated U.S. denied-party lists, including OFAC's SDN List, BIS's Entity List and Unverified List, and the State Department's Debarred Parties List. Screening should be performed at execution and re-performed periodically during the term, particularly before any material delivery or technology transfer. Counsel should ensure the agreement contains a representation by the counterparty that it is not a Restricted Party and includes a covenant to maintain that status during the term.</p>
+<blockquote>Practice Tip: For cloud-based services, the "deemed export" rule under 15 C.F.R. § 734.13(b) treats the release of controlled technology to a foreign national in the United States as an export to that person's country of nationality. Vendors with foreign-national engineers must consider whether routine support activities require licensing.</blockquote>
+<h2>End-Use and End-User Certifications</h2>
+<p>Technology agreements should include end-use certifications appropriate to the controls implicated. For dual-use items subject to the EAR, the certification should track Supplement No. 1 to Part 740 and any specific license-exception requirements invoked. For items subject to controls under ECCN 3A090, 4A090, or related entries, additional advanced-computing certifications may be required.</p>
+<h2>Sanctions Compliance Clauses</h2>
+<p>A modern sanctions-compliance clause should: (a) prohibit use, export, or re-export to embargoed or sanctioned jurisdictions; (b) require immediate notice if a counterparty becomes designated; (c) provide an immediate termination right with no liability if continued performance would violate U.S. sanctions; and (d) include indemnification for losses arising from a counterparty's violation. Counsel should resist counterparty efforts to limit the indemnity to "knowing" violations, since strict-liability enforcement is the norm in OFAC matters.</p>`,
+    flagStatus: null,
+  },
+  {
+    id: 'guide-source-code-escrow',
+    type: 'guide',
+    title: 'Source-Code Escrow Arrangements',
+    shortTitle: 'Source-Code Escrow',
+    description: 'When to require source-code escrow, structuring release conditions, and avoiding the common pitfall of stale or unverified deposits.',
+    refNumber: 'CIR-PG-2026-012',
+    lastUpdated: 'Mar 2026',
+    content: `<h2>When Escrow Adds Genuine Value</h2>
+<p>Source-code escrow is often included in software licensing agreements as a matter of habit, but in many transactions it adds no real protection. Counsel should evaluate whether the underlying business risk — vendor insolvency, abandonment of the product, or refusal to provide critical support — actually justifies the cost and complexity of an escrow arrangement.</p>
+<p>Escrow is most valuable when (a) the licensed software is mission-critical to the customer, (b) reasonable substitution would be impractical or expensive, (c) the vendor is small or financially fragile, and (d) the customer has the technical capability to use deposited code if released. When any of these factors is missing, escrow may impose ongoing administrative burden without delivering meaningful protection.</p>
+<h2>Release Conditions</h2>
+<p>The release-conditions clause is the heart of an escrow agreement. Standard release triggers include: vendor insolvency or assignment for the benefit of creditors; vendor's failure to maintain the software in accordance with documented support obligations after a defined cure period; and vendor's discontinuation of the product line. Counsel should ensure each trigger is objectively determinable, with clear documentation requirements, to avoid disputes at the moment of release.</p>
+<blockquote>Practice Tip: Avoid release triggers tied to subjective concepts like "material breach" or "failure to perform." These invite litigation at exactly the moment when the customer most needs immediate access.</blockquote>
+<h2>Verification Deposits</h2>
+<p>The most common failure mode in escrow arrangements is that the deposited materials, when finally released, are unbuildable. The deposit may be incomplete, may reference proprietary build tools, or may correspond to a stale version. Verification — performed by the escrow agent or a qualified third party — confirms that the deposit can be successfully built into a working version of the software using only the deposited materials and reasonable industry-standard tooling.</p>
+<p>Verification should be required at the time of initial deposit and at periodic intervals thereafter (typically annually, or upon each major-version update). The cost should be allocated explicitly. Customers willing to pay for verification will receive substantially better protection than customers who rely on a sealed deposit they have never tested.</p>
+<h2>Update Cadence</h2>
+<p>The escrow deposit must be updated as the software evolves. The agreement should require updated deposits within a defined period (typically 30 to 60 days) following each major release, and should treat failure to update as a material breach. Without enforceable update obligations, the deposit becomes stale within a few release cycles and provides little practical benefit.</p>`,
+    flagStatus: null,
+  },
+  {
+    id: 'guide-survival-clauses',
+    type: 'guide',
+    title: 'Survival Clauses: Drafting and Enforcement Considerations',
+    shortTitle: 'Survival Clauses',
+    description: 'Which obligations should survive termination, how long they should survive, and the doctrinal limits on perpetual covenants.',
+    refNumber: 'CIR-PG-2026-013',
+    lastUpdated: 'Jan 2026',
+    content: `<h2>The Function of a Survival Clause</h2>
+<p>A survival clause identifies the contractual obligations that continue after the agreement terminates or expires. In its absence, parties must rely on default rules of contract construction, which can produce uncertain results — particularly for obligations that, by their nature, are intended to outlast the agreement (confidentiality, indemnification, payment for services already rendered).</p>
+<p>Counsel should treat the survival clause as a checklist of the obligations the parties most care about, drafted with intentional specificity rather than as boilerplate.</p>
+<h2>Standard Surviving Obligations</h2>
+<p>Common obligations that should expressly survive include: confidentiality (typically 3 to 5 years post-termination, longer for trade secrets); indemnification obligations for events occurring during the term; payment obligations for services rendered before termination; intellectual-property assignments and licenses granted in perpetuity; representations and warranties to the extent of any survival period for breach claims; limitation-of-liability provisions; dispute-resolution procedures; and governing-law selection.</p>
+<blockquote>Practice Tip: Avoid the common drafting error of stating that "all obligations survive termination." This language is meaningless because no obligation that the agreement does not also impose can be enforced post-term. Instead, identify the specific provisions intended to survive and the duration of survival.</blockquote>
+<h2>Duration Considerations</h2>
+<p>The duration of survival should match the underlying business risk. Confidentiality survives until the information ceases to be confidential or for a defined period. Indemnification typically survives for the statute of limitations applicable to the underlying claim. Payment obligations survive until paid. IP assignments survive perpetually as a matter of property law.</p>
+<p>California courts will generally enforce reasonable survival durations. Perpetual covenants may face scrutiny under the rule against unreasonable restraints, particularly in employment-adjacent contexts. Counsel should be prepared to articulate the business justification for any survival period exceeding five years.</p>
+<h2>Interaction with Other Termination Provisions</h2>
+<p>The survival clause must be read together with any wind-down or transition-services obligations, which often impose new performance duties triggered by termination itself. These transition obligations are not "surviving" the agreement so much as being created by termination, and they should be drafted as separate provisions with their own duration and scope.</p>`,
+    flagStatus: null,
+  },
 ];
+
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+/**
+ * Returns a stable rotation of the standin documents biased by ISO week,
+ * so the right-rail "Saved Authorities" set evolves over time without
+ * being completely random within a session.
+ */
+export function pickWeeklyAuthorities(count: number): StandinDocument[] {
+  const weeks = Math.floor(Date.now() / WEEK_MS);
+  const offset = weeks % standinDocuments.length;
+  const rotated = [...standinDocuments.slice(offset), ...standinDocuments.slice(0, offset)];
+  // Light per-load shuffle of the leading window so it doesn't look frozen.
+  const window = rotated.slice(0, Math.min(count + 3, rotated.length));
+  for (let i = window.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [window[i], window[j]] = [window[j], window[i]];
+  }
+  return window.slice(0, count);
+}
