@@ -3,10 +3,14 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import CharacterCount from '@tiptap/extension-character-count';
-import { FileText, Plus, Trash2, Type, Focus } from 'lucide-react';
+import { FileText, Plus, Trash2, Type, Focus, Pencil, GitCompare, Pen } from 'lucide-react';
 import { DRAFT_TEMPLATES, type DraftTemplate } from '@/data/draft-templates';
 import { deleteDraft, getAllDrafts, getDraft, saveDraft } from '@/lib/storage';
 import type { Draft } from '@/types';
+import DraftDiagram from '@/components/DraftDiagram';
+import DraftCompare from '@/components/DraftCompare';
+
+type Mode = 'edit' | 'compare' | 'diagram';
 
 const SAVE_DEBOUNCE_MS = 700;
 
@@ -26,6 +30,7 @@ export default function TemplatesPage() {
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [title, setTitle] = useState('');
+  const [mode, setMode] = useState<Mode>('edit');
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [typewriterMode, setTypewriterMode] = useState(false);
@@ -272,54 +277,110 @@ export default function TemplatesPage() {
 
         {activeDraft ? (
           <>
-            <div className="border-b border-border px-6 py-3 flex items-center justify-between flex-shrink-0">
+            <div className="border-b border-border px-6 py-2 flex items-center justify-between flex-shrink-0 gap-3">
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="flex-1 font-serif text-base text-navy bg-transparent focus:outline-none placeholder-text-muted"
                 placeholder="Document title…"
+                disabled={mode !== 'edit'}
               />
-              <div className="flex items-center gap-1 ml-3">
+              <div className="flex items-center gap-0.5 border border-border rounded">
                 <button
-                  onClick={() => setTypewriterMode((p) => !p)}
-                  className={`p-1.5 rounded text-[10px] font-mono ${
-                    typewriterMode ? 'text-navy bg-cream' : 'text-text-muted hover:text-text-main'
+                  onClick={() => setMode('edit')}
+                  className={`flex items-center gap-1 px-2 py-1 text-[10px] font-sans uppercase tracking-wider rounded-l ${
+                    mode === 'edit' ? 'bg-navy text-white' : 'text-text-muted hover:text-navy'
                   }`}
-                  title="Typewriter mode"
                 >
-                  <Type className="w-3.5 h-3.5" />
+                  <Pencil className="w-3 h-3" /> Edit
                 </button>
                 <button
-                  onClick={() => setFocusMode((p) => !p)}
-                  className={`p-1.5 rounded ${
-                    focusMode ? 'text-navy bg-cream' : 'text-text-muted hover:text-text-main'
+                  onClick={() => setMode('compare')}
+                  className={`flex items-center gap-1 px-2 py-1 text-[10px] font-sans uppercase tracking-wider ${
+                    mode === 'compare' ? 'bg-navy text-white' : 'text-text-muted hover:text-navy'
                   }`}
-                  title="Focus mode (dims surrounding paragraphs)"
                 >
-                  <Focus className="w-3.5 h-3.5" />
+                  <GitCompare className="w-3 h-3" /> Compare
+                </button>
+                <button
+                  onClick={() => setMode('diagram')}
+                  className={`flex items-center gap-1 px-2 py-1 text-[10px] font-sans uppercase tracking-wider rounded-r ${
+                    mode === 'diagram' ? 'bg-navy text-white' : 'text-text-muted hover:text-navy'
+                  }`}
+                >
+                  <Pen className="w-3 h-3" /> Diagram
                 </button>
               </div>
+              {mode === 'edit' && (
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setTypewriterMode((p) => !p)}
+                    className={`p-1.5 rounded text-[10px] font-mono ${
+                      typewriterMode ? 'text-navy bg-cream' : 'text-text-muted hover:text-text-main'
+                    }`}
+                    title="Typewriter mode"
+                  >
+                    <Type className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => setFocusMode((p) => !p)}
+                    className={`p-1.5 rounded ${
+                      focusMode ? 'text-navy bg-cream' : 'text-text-muted hover:text-text-main'
+                    }`}
+                    title="Focus mode (dims surrounding paragraphs)"
+                  >
+                    <Focus className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
             </div>
-            <div
-              ref={editorContainerRef}
-              className={`flex-1 overflow-y-auto px-12 py-10 ${focusMode ? 'tiptap-focus-mode' : ''}`}
-            >
-              <div className="max-w-reading-pane mx-auto">
-                <EditorContent
-                  editor={editor}
-                  className="prose-legal tiptap-editor"
+
+            {mode === 'edit' && (
+              <>
+                <div
+                  ref={editorContainerRef}
+                  className={`flex-1 overflow-y-auto px-12 py-10 ${focusMode ? 'tiptap-focus-mode' : ''}`}
+                >
+                  <div className="max-w-reading-pane mx-auto">
+                    <EditorContent editor={editor} className="prose-legal tiptap-editor" />
+                  </div>
+                </div>
+                <div className="border-t border-border px-4 py-1.5 flex items-center justify-between flex-shrink-0">
+                  <span className="text-[10px] font-mono text-text-muted/70">
+                    {savedAt ? `Saved ${new Date(savedAt).toLocaleTimeString()}` : 'Unsaved'}
+                  </span>
+                  <span className="text-[10px] font-mono text-text-muted/70">
+                    {wordCount.toLocaleString()} words
+                  </span>
+                </div>
+              </>
+            )}
+
+            {mode === 'compare' && <DraftCompare drafts={drafts} defaultLeftId={activeId} />}
+
+            {mode === 'diagram' && (
+              <div className="flex-1 min-h-0">
+                <DraftDiagram
+                  key={activeDraft.id}
+                  initialJson={activeDraft.diagram ?? ''}
+                  onChange={(json) => {
+                    void getDraft(activeDraft.id).then((existing) => {
+                      if (!existing) return;
+                      const updatedAt = new Date().toISOString();
+                      const next: Draft = { ...existing, diagram: json, updatedAt };
+                      void saveDraft(next);
+                      setDrafts((prev) =>
+                        prev.map((d) => (d.id === activeDraft.id ? next : d)).sort((a, b) =>
+                          b.updatedAt.localeCompare(a.updatedAt),
+                        ),
+                      );
+                      setSavedAt(updatedAt);
+                    });
+                  }}
                 />
               </div>
-            </div>
-            <div className="border-t border-border px-4 py-1.5 flex items-center justify-between flex-shrink-0">
-              <span className="text-[10px] font-mono text-text-muted/70">
-                {savedAt ? `Saved ${new Date(savedAt).toLocaleTimeString()}` : 'Unsaved'}
-              </span>
-              <span className="text-[10px] font-mono text-text-muted/70">
-                {wordCount.toLocaleString()} words
-              </span>
-            </div>
+            )}
           </>
         ) : (
           !showTemplatePicker && (

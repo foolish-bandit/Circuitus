@@ -58,8 +58,20 @@ export interface ParsedDocument {
 export interface Draft {
   id: string;
   title: string;
-  /** Tiptap JSON document body, stored as a string. */
+  /** Tiptap HTML document body, stored as a string. */
   body: string;
+  /** Excalidraw scene serialized as JSON string. Empty string means no diagram. */
+  diagram?: string;
+  templateId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SpreadsheetWorkbook {
+  id: string;
+  title: string;
+  /** JSON-stringified FortuneSheet sheets array. */
+  sheets: string;
   templateId: string | null;
   createdAt: string;
   updatedAt: string;
