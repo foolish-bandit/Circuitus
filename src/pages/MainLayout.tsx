@@ -8,6 +8,10 @@ import StatusBar from '@/components/StatusBar';
 import MatterTabs from '@/components/MatterTabs';
 import type { MatterTab } from '@/components/MatterTabs';
 import LibraryPage from '@/pages/LibraryPage';
+import TemplatesPage from '@/pages/TemplatesPage';
+import AuthoritiesFeedPage from '@/pages/AuthoritiesFeedPage';
+import CompliancePage from '@/pages/CompliancePage';
+import AudioLibraryPage from '@/pages/AudioLibraryPage';
 import NotesPane from '@/components/NotesPane';
 import IncomingCallOverlay from '@/components/IncomingCallOverlay';
 import { parseFile } from '@/lib/parsers';
@@ -64,8 +68,6 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
   const [viewingStandin, setViewingStandin] = useState<StandinDocument | null>(null);
   const [standinChapters, setStandinChapters] = useState<DocumentChapter[]>([]);
 
-  // Nav content state
-  const [navContent, setNavContent] = useState<string | null>(null);
 
   // Matter tabs
   const [matterTabs, setMatterTabs] = useState<MatterTab[]>(() => {
@@ -217,7 +219,7 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
       setInitialScrollPercent(doc.readingPosition?.scrollPercent || 0);
       setViewingStandin(null);
       setStandinChapters([]);
-      setNavContent(null);
+      setActiveNav('Practice Guides');
 
       setMatterTabs((prev) =>
         prev.find((t) => t.id === id)
@@ -288,7 +290,7 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
     setStandinChapters(tempChapters);
     setActiveChapterIndex(0);
     setCurrentDoc(null);
-    setNavContent(null);
+    setActiveNav('Practice Guides');
 
     setMatterTabs((prev) =>
       prev.find((t) => t.id === doc.id)
@@ -376,21 +378,6 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
 
   function handleNavChange(nav: string) {
     setActiveNav(nav);
-    if (nav === 'Practice Guides') {
-      setNavContent(null);
-    } else if (nav === 'Templates') {
-      setNavContent(
-        'Template library syncing... 14 templates available. Contact your Circuitus administrator to configure template access.',
-      );
-    } else if (nav === 'Authorities') {
-      setNavContent(
-        'Authority database contains 2,847 indexed sources. Full-text search available for subscribed jurisdictions.',
-      );
-    } else if (nav === 'Compliance') {
-      setNavContent(
-        "Compliance dashboard requires integration with your organization's GRC platform. See Circuitus Admin Settings.",
-      );
-    }
   }
 
   async function handleSearchSubmit() {
@@ -650,15 +637,14 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
           />
         )}
 
-        {navContent ? (
-          <div className="flex-1 flex items-center justify-center bg-cream">
-            <div className="text-center max-w-md">
-              <div className="w-12 h-12 rounded-full bg-border/30 flex items-center justify-center mx-auto mb-4">
-                <div className="w-4 h-4 border-2 border-gold border-t-transparent rounded-full animate-spin" />
-              </div>
-              <p className="text-sm font-sans text-text-muted leading-relaxed">{navContent}</p>
-            </div>
-          </div>
+        {activeNav === 'Templates' ? (
+          <TemplatesPage />
+        ) : activeNav === 'Authorities' ? (
+          <AuthoritiesFeedPage />
+        ) : activeNav === 'Compliance' ? (
+          <CompliancePage />
+        ) : activeNav === 'Audio' ? (
+          <AudioLibraryPage />
         ) : isReading ? (
           <ContentArea
             isEmpty={false}

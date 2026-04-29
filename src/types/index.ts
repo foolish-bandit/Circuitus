@@ -55,6 +55,26 @@ export interface ParsedDocument {
   chapters: DocumentChapter[];
 }
 
+export interface Draft {
+  id: string;
+  title: string;
+  /** Tiptap JSON document body, stored as a string. */
+  body: string;
+  templateId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AudioTrack {
+  id: string;
+  title: string;
+  presenter: string;
+  /** Either a Blob (for imported files) or a URL string (for streamed sources). */
+  source: { kind: 'blob'; blob: Blob } | { kind: 'url'; url: string };
+  durationSec: number;
+  addedAt: string;
+}
+
 export interface MatterNote {
   /** Document/matter id this note belongs to. Use 'global' for the catch-all pad. */
   documentId: string;

@@ -11,11 +11,18 @@
     "postinstall": "node scripts/copy-pdf-worker.mjs"
   },
   "dependencies": {
+    "@tiptap/extension-character-count": "^3.22.5",
+    "@tiptap/extension-placeholder": "^3.22.5",
+    "@tiptap/pm": "^3.22.5",
+    "@tiptap/react": "^3.22.5",
+    "@tiptap/starter-kit": "^3.22.5",
+    "chess.js": "^1.4.0",
     "idb": "^8.0.0",
     "jszip": "^3.10.1",
     "lucide-react": "^0.400.0",
     "pdfjs-dist": "3.11.174",
     "react": "^19.2.4",
+    "react-chessboard": "^5.10.0",
     "react-dom": "^19.2.4"
   },
   "devDependencies": {
