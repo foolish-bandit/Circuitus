@@ -273,19 +273,45 @@ export default function AudioLibraryPage() {
 
       {/* Player bar */}
       {active && (
-        <div className="border-t border-border bg-white px-6 py-2 flex items-center gap-4 flex-shrink-0">
+        <div
+          className="bg-paper-cool px-6 py-2.5 flex items-center gap-4 flex-shrink-0"
+          style={{ borderTop: '1px solid #D9D2C0' }}
+        >
           <button
             onClick={togglePlay}
-            className="w-9 h-9 rounded-full bg-navy text-gold flex items-center justify-center hover:bg-navy-light"
+            className="w-9 h-9 bg-navy text-brass-bright flex items-center justify-center hover:bg-navy-dark transition-colors flex-shrink-0"
+            style={{
+              borderRadius: 0,
+              border: '1px solid #0A1F3D',
+              boxShadow: 'inset 0 0 0 1px rgba(184, 147, 43, 0.22)',
+            }}
+            aria-label={playing ? 'Pause' : 'Play'}
           >
             {playing ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
           </button>
-          <div className="flex-1 min-w-0">
-            <p className="font-serif text-sm text-navy truncate">{active.title}</p>
-            <p className="text-[10px] font-sans text-text-muted truncate">{active.presenter}</p>
+          <div className="min-w-0 max-w-[24%]">
+            <p className="font-display text-[13px] text-ink truncate leading-tight">{active.title}</p>
+            <p className="font-serif italic text-[11px] text-ink-muted truncate">{active.presenter}</p>
           </div>
-          <span className="text-[10px] font-mono text-text-muted">
-            {formatDuration(time)} / {formatDuration(active.durationSec)}
+          <input
+            type="range"
+            min={0}
+            max={active.durationSec || 0}
+            step={0.5}
+            value={Math.min(time, active.durationSec || 0)}
+            onChange={(e) => {
+              const a = audioRef.current;
+              if (!a) return;
+              const t = parseFloat(e.target.value);
+              a.currentTime = t;
+              setTime(t);
+            }}
+            className="flex-1 audio-seek h-1 cursor-pointer"
+            aria-label="Seek"
+          />
+          <span className="font-mono text-[10px] text-ink-muted tabular-nums whitespace-nowrap">
+            {formatDuration(time)} <span className="text-ink-muted/40">/</span>{' '}
+            {formatDuration(active.durationSec)}
           </span>
           <audio
             ref={audioRef}

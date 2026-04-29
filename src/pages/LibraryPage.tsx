@@ -36,6 +36,8 @@ const TYPE_LABEL: Record<string, string> = {
 export default function LibraryPage({ onOpenDocument, onImport, refreshKey = 0 }: LibraryPageProps) {
   const [documents, setDocuments] = useState<StoredDocument[]>([]);
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameDraft, setRenameDraft] = useState('');
   const menuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -60,12 +62,25 @@ export default function LibraryPage({ onOpenDocument, onImport, refreshKey = 0 }
     setMenuOpen(null);
   }
 
-  async function handleRename(doc: StoredDocument) {
+  function startRename(doc: StoredDocument) {
     setMenuOpen(null);
-    const next = window.prompt('Rename matter', doc.title);
-    if (!next || next === doc.title) return;
-    await updateDocumentTitle(doc.id, next);
-    setDocuments((prev) => prev.map((d) => (d.id === doc.id ? { ...d, title: next } : d)));
+    setRenamingId(doc.id);
+    setRenameDraft(doc.title);
+  }
+
+  async function commitRename(id: string) {
+    const next = renameDraft.trim();
+    setRenamingId(null);
+    if (!next) return;
+    const current = documents.find((d) => d.id === id);
+    if (!current || next === current.title) return;
+    await updateDocumentTitle(id, next);
+    setDocuments((prev) => prev.map((d) => (d.id === id ? { ...d, title: next } : d)));
+  }
+
+  function cancelRename() {
+    setRenamingId(null);
+    setRenameDraft('');
   }
 
   if (documents.length === 0) {
@@ -194,7 +209,7 @@ export default function LibraryPage({ onOpenDocument, onImport, refreshKey = 0 }
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleRename(doc);
+                              startRename(doc);
                             }}
                             className="w-full text-left px-3 py-1.5 text-[11px] font-sans hover:bg-paper-warm transition-colors flex items-center gap-1.5"
                           >
@@ -216,9 +231,34 @@ export default function LibraryPage({ onOpenDocument, onImport, refreshKey = 0 }
                     </div>
                   </div>
 
-                  <h3 className="font-display text-[16px] text-ink font-semibold leading-snug mb-2 line-clamp-2 flex-1">
-                    {doc.title}
-                  </h3>
+                  {renamingId === doc.id ? (
+                    <input
+                      autoFocus
+                      type="text"
+                      value={renameDraft}
+                      onChange={(e) => setRenameDraft(e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
+                      onKeyDown={(e) => {
+                        e.stopPropagation();
+                        if (e.key === 'Enter') commitRename(doc.id);
+                        else if (e.key === 'Escape') cancelRename();
+                      }}
+                      onBlur={() => commitRename(doc.id)}
+                      className="font-display text-[16px] text-ink font-semibold leading-snug mb-2 flex-1 w-full bg-paper px-1 -mx-1 focus:outline-none"
+                      style={{ border: '1px solid #9C7A1F', borderRadius: 0 }}
+                    />
+                  ) : (
+                    <h3
+                      className="font-display text-[16px] text-ink font-semibold leading-snug mb-2 line-clamp-2 flex-1"
+                      onDoubleClick={(e) => {
+                        e.stopPropagation();
+                        startRename(doc);
+                      }}
+                      title="Double-click to rename"
+                    >
+                      {doc.title}
+                    </h3>
+                  )}
 
                   <p className="font-serif italic text-[11px] text-ink-muted mb-3 line-clamp-1">
                     Imported {timeAgo(doc.dateAdded)}

@@ -29,7 +29,17 @@ function PageFallback() {
   );
 }
 import { parseFile } from '@/lib/parsers';
-import { saveDocument, getDocument, saveHighlight, saveBookmark } from '@/lib/storage';
+import {
+  saveDocument,
+  getDocument,
+  saveHighlight,
+  saveBookmark,
+  getHighlights,
+  getBookmarks,
+  deleteHighlight as deleteHighlightStore,
+  deleteBookmark as deleteBookmarkStore,
+} from '@/lib/storage';
+import type { Highlight as HighlightT, Bookmark as BookmarkT } from '@/types';
 import { useReadingPosition } from '@/hooks/useReadingPosition';
 import { useQuickRef, formatChord } from '@/hooks/useQuickRef';
 import { useAutoPilot } from '@/hooks/useAutoPilot';
@@ -138,6 +148,38 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
 
   const [initialScrollPercent, setInitialScrollPercent] = useState(0);
 
+  // Annotation state for the open document
+  const [highlights, setHighlights] = useState<HighlightT[]>([]);
+  const [bookmarks, setBookmarks] = useState<BookmarkT[]>([]);
+  const annotationDocId = currentDoc?.id ?? viewingStandin?.id ?? null;
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!annotationDocId) {
+      // Use a microtask so the rule doesn't flag synchronous setState in
+      // the effect body — this is a legitimate "clear data when key changes"
+      // pattern.
+      Promise.resolve().then(() => {
+        if (cancelled) return;
+        setHighlights([]);
+        setBookmarks([]);
+      });
+      return () => {
+        cancelled = true;
+      };
+    }
+    void Promise.all([getHighlights(annotationDocId), getBookmarks(annotationDocId)]).then(
+      ([h, b]) => {
+        if (cancelled) return;
+        setHighlights(h);
+        setBookmarks(b);
+      },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [annotationDocId]);
+
   // Save state on entering quick-ref. The matching restore effect lives below,
   // after `handleStandinClick` and `openDocument` are declared.
   useEffect(() => {
@@ -220,11 +262,8 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
     };
   }, []);
 
-  // Auto-pilot — only active when not in quickref (which is its own static cover)
-  useAutoPilot({
-    enabled: autoPilotEnabled && !isQuickRef,
-    scrollContainerRef,
-  });
+  // Auto-pilot — handlers are wired below `handleStandinClick`'s declaration
+  // so the rotation callback can call into it without a TDZ hoist error.
 
   const handleFontSizeChange = useCallback((delta: number) => {
     setFontSize((prev) => {
@@ -387,13 +426,29 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
     [activeTabId, handleStandinClick, openDocument],
   );
 
+  // Auto-pilot — only active when not in quickref. Idle-rotate flips among
+  // sidebar standins every few minutes when the user is reading a guide.
+  const handleIdleRotate = useCallback(() => {
+    if (!viewingStandin || sidebarDocs.length === 0) return;
+    const others = sidebarDocs.filter((d) => d.id !== viewingStandin.id);
+    if (others.length === 0) return;
+    const next = others[Math.floor(Math.random() * others.length)];
+    handleStandinClick(next);
+  }, [viewingStandin, sidebarDocs, handleStandinClick]);
+
+  useAutoPilot({
+    enabled: autoPilotEnabled && !isQuickRef,
+    scrollContainerRef,
+    onIdleRotate: handleIdleRotate,
+  });
+
   function handleChapterClick(index: number) {
     setActiveChapterIndex(index);
     const el = document.getElementById(`chapter-${index}`);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  function handleHighlight(payload: {
+  async function handleHighlight(payload: {
     text: string;
     color: 'yellow' | 'blue' | 'green';
     startOffset: number;
@@ -401,7 +456,7 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
   }) {
     const docId = currentDoc?.id || viewingStandin?.id;
     if (!docId) return;
-    saveHighlight({
+    await saveHighlight({
       documentId: docId,
       chapterIndex: activeChapterIndex,
       startOffset: payload.startOffset,
@@ -410,9 +465,11 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
       color: payload.color,
       dateCreated: new Date().toISOString(),
     });
+    const fresh = await getHighlights(docId);
+    setHighlights(fresh);
   }
 
-  function handleBookmark(text: string) {
+  async function handleBookmark(text: string) {
     const docId = currentDoc?.id || viewingStandin?.id;
     if (!docId) return;
     const el = scrollContainerRef.current;
@@ -420,7 +477,7 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
       el && el.scrollHeight > el.clientHeight
         ? (el.scrollTop / (el.scrollHeight - el.clientHeight)) * 100
         : 0;
-    saveBookmark({
+    await saveBookmark({
       documentId: docId,
       chapterIndex: activeChapterIndex,
       scrollPercent: Math.round(scrollPercent * 100) / 100,
@@ -428,6 +485,18 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
       dateCreated: new Date().toISOString(),
       label: text.slice(0, 60) + (text.length > 60 ? '...' : ''),
     });
+    const fresh = await getBookmarks(docId);
+    setBookmarks(fresh);
+  }
+
+  async function handleDeleteHighlight(id: string) {
+    await deleteHighlightStore(id);
+    setHighlights((prev) => prev.filter((h) => h.id !== id));
+  }
+
+  async function handleDeleteBookmark(id: string) {
+    await deleteBookmarkStore(id);
+    setBookmarks((prev) => prev.filter((b) => b.id !== id));
   }
 
   function handleNavChange(nav: string) {
@@ -450,6 +519,11 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
         results.push({ label: doc.shortTitle, docId: doc.id });
       }
     }
+
+    if (results.length === 0) {
+      results.push({ label: `No matches in the practice library for “${searchQuery}”.` });
+    }
+
     for (const s of pickSuggestions(searchQuery)) {
       results.push(s);
     }
@@ -698,6 +772,11 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
             onChapterClick={handleChapterClick}
             documentTitle={contentTitle}
             documentType={currentDoc?.fileType || (viewingStandin ? 'guide' : undefined)}
+            highlights={highlights}
+            bookmarks={bookmarks}
+            onJumpToChapter={handleChapterClick}
+            onDeleteHighlight={handleDeleteHighlight}
+            onDeleteBookmark={handleDeleteBookmark}
           />
         )}
 
@@ -783,7 +862,24 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
       <AssistantButton onClick={() => setAssistantOpen(true)} />
       {assistantOpen && (
         <Suspense fallback={null}>
-          <AssistantPanel open={assistantOpen} onClose={() => setAssistantOpen(false)} />
+          <AssistantPanel
+            open={assistantOpen}
+            onClose={() => setAssistantOpen(false)}
+            getContext={() => {
+              const parts: string[] = [];
+              if (currentDoc) parts.push(`Open uploaded matter: "${currentDoc.title}".`);
+              if (viewingStandin)
+                parts.push(`Open practice guide: "${viewingStandin.title}".`);
+              if (highlights.length > 0) {
+                const recent = highlights.slice(0, 5);
+                parts.push(
+                  `Recent highlights from the open matter:\n` +
+                    recent.map((h) => `  • "${h.selectedText}"`).join('\n'),
+                );
+              }
+              return parts.join('\n');
+            }}
+          />
         </Suspense>
       )}
       <ShortcutsOverlay

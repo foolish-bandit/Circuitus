@@ -26,9 +26,18 @@ export function getEngine(): Promise<MLCEngine> {
       initProgressCallback: (report) => {
         for (const l of progressListeners) l(report);
       },
+    }).catch((err) => {
+      // Clear the cached failure so the next call can retry from scratch.
+      enginePromise = null;
+      throw err;
     });
   }
   return enginePromise;
+}
+
+/** Drop the cached engine so the next getEngine() retries from scratch. */
+export function resetEngine(): void {
+  enginePromise = null;
 }
 
 export interface ChatMessage {
@@ -36,9 +45,15 @@ export interface ChatMessage {
   content: string;
 }
 
-export async function* streamReply(history: ChatMessage[]): AsyncGenerator<string, void, void> {
+export async function* streamReply(
+  history: ChatMessage[],
+  context?: string,
+): AsyncGenerator<string, void, void> {
   const engine = await getEngine();
-  const messages: ChatMessage[] = [{ role: 'system', content: SYSTEM_PROMPT }, ...history];
+  const systemContent = context
+    ? `${SYSTEM_PROMPT}\n\n--- Active Workspace Context ---\n${context}\n--- End Context ---`
+    : SYSTEM_PROMPT;
+  const messages: ChatMessage[] = [{ role: 'system', content: systemContent }, ...history];
   const stream = await engine.chat.completions.create({
     messages,
     stream: true,

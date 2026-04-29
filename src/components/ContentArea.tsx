@@ -174,19 +174,36 @@ export default function ContentArea({
       y: rect.top - containerRect.top - 8,
       text,
     });
-  }, [effectiveScrollRef]);
+    // Refs are stable so they don't belong in the dep array; the React
+    // compiler complains about reading .current with the ref listed.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // --- Left/Right arrow key chapter navigation ---
+  // Bound to the scroll container instead of the window so keys typed while
+  // a different page is mounted (games, editor, spreadsheet) don't trigger
+  // chapter jumps against a stale chapters array.
   useEffect(() => {
-    if (!chapters?.length || !onActiveChapterChange) return;
+    const container = effectiveScrollRef.current;
+    if (!container || !chapters?.length || !onActiveChapterChange) return;
+
+    // Make the container focusable so it can receive key events.
+    if (!container.hasAttribute('tabindex')) container.setAttribute('tabindex', '-1');
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't intercept if user is typing or has an active selection context
       const target = e.target as HTMLElement;
       if (
         target instanceof HTMLInputElement ||
         target instanceof HTMLTextAreaElement ||
         target.isContentEditable
+      ) return;
+
+      // Only handle the keys when focus is inside the reading pane or on
+      // body (the typical idle case).
+      if (
+        target !== document.body &&
+        target !== container &&
+        !container.contains(target)
       ) return;
 
       if (e.key === 'ArrowLeft') {
@@ -204,7 +221,7 @@ export default function ContentArea({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [chapters, activeChapterIndex, onActiveChapterChange]);
+  }, [chapters, activeChapterIndex, onActiveChapterChange, effectiveScrollRef]);
 
   const handleHighlight = (color: 'yellow' | 'blue' | 'green') => {
     if (!selectionToolbar) return;
