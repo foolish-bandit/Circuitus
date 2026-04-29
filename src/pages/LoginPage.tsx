@@ -1,18 +1,46 @@
 import { useState, type FormEvent } from 'react';
-import { login } from '@/lib/auth';
+import { hasPassphrase, login, setPassphrase as savePassphrase } from '@/lib/auth';
 
 export default function LoginPage({ onLogin }: { onLogin: () => void }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
   const [error, setError] = useState('');
+  const [enrolling, setEnrolling] = useState(false);
+  const needsEnrollment = useState<boolean>(() => !hasPassphrase())[0];
 
-  function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    setError('');
     if (!email || !password) {
       setError('Please enter your credentials.');
       return;
     }
-    login(email, password);
+
+    if (enrolling) {
+      if (password.length < 4) {
+        setError('Passphrase must be at least 4 characters.');
+        return;
+      }
+      if (password !== confirm) {
+        setError('Passphrases do not match.');
+        return;
+      }
+      await savePassphrase(password);
+      const user = await login(email, password);
+      if (!user) {
+        setError('Could not establish session.');
+        return;
+      }
+      onLogin();
+      return;
+    }
+
+    const user = await login(email, password);
+    if (!user) {
+      setError('Invalid credentials.');
+      return;
+    }
     onLogin();
   }
 
@@ -20,9 +48,7 @@ export default function LoginPage({ onLogin }: { onLogin: () => void }) {
     <div className="min-h-screen bg-navy flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-10">
-          <h1 className="font-serif text-white text-5xl font-bold tracking-tight">
-            Circuitus
-          </h1>
+          <h1 className="font-serif text-white text-5xl font-bold tracking-tight">Circuitus</h1>
           <p className="text-gold text-sm tracking-[0.25em] uppercase mt-3 font-sans font-light">
             The Tech-Forward Suite for Counsel
           </p>
@@ -53,27 +79,63 @@ export default function LoginPage({ onLogin }: { onLogin: () => void }) {
 
             <div>
               <label className="block text-white/60 text-xs font-sans uppercase tracking-wider mb-1.5">
-                Password
+                {enrolling ? 'Set Passphrase' : 'Password'}
               </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
+                placeholder={enrolling ? 'Choose a passphrase' : 'Enter your password'}
                 className="w-full bg-white/[0.06] border border-white/10 rounded px-4 py-2.5 text-white placeholder-white/25 font-sans text-sm focus:outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/25 transition-colors"
               />
             </div>
 
-            {error && (
-              <p className="text-red-400 text-xs font-sans">{error}</p>
+            {enrolling && (
+              <div>
+                <label className="block text-white/60 text-xs font-sans uppercase tracking-wider mb-1.5">
+                  Confirm Passphrase
+                </label>
+                <input
+                  type="password"
+                  value={confirm}
+                  onChange={(e) => setConfirm(e.target.value)}
+                  placeholder="Re-enter passphrase"
+                  className="w-full bg-white/[0.06] border border-white/10 rounded px-4 py-2.5 text-white placeholder-white/25 font-sans text-sm focus:outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/25 transition-colors"
+                />
+              </div>
             )}
+
+            {error && <p className="text-red-400 text-xs font-sans">{error}</p>}
 
             <button
               type="submit"
               className="w-full bg-navy-dark border border-gold/30 text-gold font-sans font-semibold text-sm uppercase tracking-wider py-3 rounded hover:bg-navy-light hover:border-gold/50 transition-colors mt-2"
             >
-              Sign In
+              {enrolling ? 'Enroll & Sign In' : 'Sign In'}
             </button>
+
+            {needsEnrollment && !enrolling && (
+              <button
+                type="button"
+                onClick={() => setEnrolling(true)}
+                className="w-full text-white/40 hover:text-white/70 text-[10px] font-sans uppercase tracking-wider transition-colors"
+              >
+                First time on this device? Set a passphrase
+              </button>
+            )}
+            {enrolling && (
+              <button
+                type="button"
+                onClick={() => {
+                  setEnrolling(false);
+                  setConfirm('');
+                  setError('');
+                }}
+                className="w-full text-white/40 hover:text-white/70 text-[10px] font-sans uppercase tracking-wider transition-colors"
+              >
+                Skip — sign in without a passphrase
+              </button>
+            )}
           </div>
 
           <p className="text-white/20 text-[10px] font-sans text-center mt-6 leading-relaxed">

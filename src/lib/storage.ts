@@ -1,5 +1,5 @@
 import { openDB, type IDBPDatabase } from 'idb';
-import type { StoredDocument, Bookmark, Highlight, ReadingPosition } from '@/types';
+import type { StoredDocument, Bookmark, Highlight, ReadingPosition, MatterNote } from '@/types';
 
 interface CircuitusDB {
   documents: {
@@ -24,23 +24,32 @@ interface CircuitusDB {
       'by-documentId': string;
     };
   };
+  notes: {
+    key: string;
+    value: MatterNote;
+  };
 }
 
 let dbPromise: Promise<IDBPDatabase<CircuitusDB>> | null = null;
 
 function getDB() {
   if (!dbPromise) {
-    dbPromise = openDB<CircuitusDB>('circuitus-db', 1, {
-      upgrade(db) {
-        const docStore = db.createObjectStore('documents', { keyPath: 'id' });
-        docStore.createIndex('by-dateAdded', 'dateAdded');
-        docStore.createIndex('by-lastOpened', 'lastOpened');
+    dbPromise = openDB<CircuitusDB>('circuitus-db', 2, {
+      upgrade(db, oldVersion) {
+        if (oldVersion < 1) {
+          const docStore = db.createObjectStore('documents', { keyPath: 'id' });
+          docStore.createIndex('by-dateAdded', 'dateAdded');
+          docStore.createIndex('by-lastOpened', 'lastOpened');
 
-        const bmStore = db.createObjectStore('bookmarks', { keyPath: 'id' });
-        bmStore.createIndex('by-documentId', 'documentId');
+          const bmStore = db.createObjectStore('bookmarks', { keyPath: 'id' });
+          bmStore.createIndex('by-documentId', 'documentId');
 
-        const hlStore = db.createObjectStore('highlights', { keyPath: 'id' });
-        hlStore.createIndex('by-documentId', 'documentId');
+          const hlStore = db.createObjectStore('highlights', { keyPath: 'id' });
+          hlStore.createIndex('by-documentId', 'documentId');
+        }
+        if (oldVersion < 2) {
+          db.createObjectStore('notes', { keyPath: 'documentId' });
+        }
       },
     });
   }
@@ -123,4 +132,15 @@ export async function getHighlights(documentId: string): Promise<Highlight[]> {
 export async function deleteHighlight(id: string): Promise<void> {
   const db = await getDB();
   await db.delete('highlights', id);
+}
+
+// Notes
+export async function saveNote(note: MatterNote): Promise<void> {
+  const db = await getDB();
+  await db.put('notes', note);
+}
+
+export async function getNote(documentId: string): Promise<MatterNote | undefined> {
+  const db = await getDB();
+  return db.get('notes', documentId);
 }

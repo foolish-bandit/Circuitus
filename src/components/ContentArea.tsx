@@ -14,7 +14,12 @@ interface ContentAreaProps {
   showParagraphNumbers?: boolean;
   activeChapterIndex?: number;
   onActiveChapterChange?: (index: number) => void;
-  onHighlight?: (text: string, color: 'yellow' | 'blue' | 'green') => void;
+  onHighlight?: (payload: {
+    text: string;
+    color: 'yellow' | 'blue' | 'green';
+    startOffset: number;
+    endOffset: number;
+  }) => void;
   onBookmark?: (text: string) => void;
   scrollContainerRef?: React.RefObject<HTMLDivElement | null>;
   initialScrollPercent?: number;
@@ -190,13 +195,27 @@ export default function ContentArea({
 
   const handleHighlight = (color: 'yellow' | 'blue' | 'green') => {
     if (!selectionToolbar) return;
-    onHighlight?.(selectionToolbar.text, color);
 
-    // Apply visual highlight to the selection
     const selection = window.getSelection();
+    let startOffset = 0;
+    let endOffset = selectionToolbar.text.length;
+
     if (selection && !selection.isCollapsed) {
       try {
         const range = selection.getRangeAt(0);
+        // Anchor offsets to the enclosing chapter container so they remain
+        // meaningful across re-renders.
+        const container =
+          (range.startContainer.parentElement?.closest('[data-chapter-index]') as HTMLElement | null) ??
+          contentRef.current;
+        if (container) {
+          const pre = range.cloneRange();
+          pre.selectNodeContents(container);
+          pre.setEnd(range.startContainer, range.startOffset);
+          startOffset = pre.toString().length;
+          endOffset = startOffset + selectionToolbar.text.length;
+        }
+
         const mark = document.createElement('mark');
         mark.className = `highlight-${color}`;
         range.surroundContents(mark);
@@ -205,6 +224,8 @@ export default function ContentArea({
       }
       selection.removeAllRanges();
     }
+
+    onHighlight?.({ text: selectionToolbar.text, color, startOffset, endOffset });
     setSelectionToolbar(null);
   };
 

@@ -55,6 +55,13 @@ export interface ParsedDocument {
   chapters: DocumentChapter[];
 }
 
+export interface MatterNote {
+  /** Document/matter id this note belongs to. Use 'global' for the catch-all pad. */
+  documentId: string;
+  body: string;
+  updatedAt: string;
+}
+
 export interface StandinDocument {
   id: string;
   type: 'guide' | 'article' | 'case';
