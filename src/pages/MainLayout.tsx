@@ -98,9 +98,14 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
   // Library refresh counter
   const [libraryRefreshKey, setLibraryRefreshKey] = useState(0);
 
-  // Responsive sidebar state
-  const [hideLeftSidebar, setHideLeftSidebar] = useState(false);
-  const [hideRightSidebar, setHideRightSidebar] = useState(false);
+  // Responsive sidebar state — initial values computed lazily from
+  // window.innerWidth so we don't have to setState inside an effect on mount.
+  const [hideLeftSidebar, setHideLeftSidebar] = useState(
+    () => typeof window !== 'undefined' && window.innerWidth < LEFT_SIDEBAR_BREAKPOINT,
+  );
+  const [hideRightSidebar, setHideRightSidebar] = useState(
+    () => typeof window !== 'undefined' && window.innerWidth < RIGHT_SIDEBAR_BREAKPOINT,
+  );
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -167,7 +172,7 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
     setSidebarDocs(pickWeeklyAuthorities(Math.min(7, _standinDocs.length)));
   }, []);
 
-  // Responsive sidebar collapse
+  // Responsive sidebar collapse on resize (initial value seeded above).
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>;
     function handleResize() {
@@ -177,8 +182,6 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
         setHideRightSidebar(window.innerWidth < RIGHT_SIDEBAR_BREAKPOINT);
       }, RESIZE_DEBOUNCE_MS);
     }
-    setHideLeftSidebar(window.innerWidth < LEFT_SIDEBAR_BREAKPOINT);
-    setHideRightSidebar(window.innerWidth < RIGHT_SIDEBAR_BREAKPOINT);
     window.addEventListener('resize', handleResize);
     return () => {
       window.removeEventListener('resize', handleResize);
