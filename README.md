@@ -13,9 +13,7 @@
 </p>
 
 <p align="center">
-  A web-based document reader, annotation system, and curated practice library<br/>
-  with legal-grade typography and a professional research interface.<br/><br/>
-  Everything runs in the browser. Nothing is uploaded. Nothing phones home.<br/><br/>
+  A web-based document reader, annotation system, and curated practice library with legal-grade typography and a professional research interface. Everything runs in the browser. Nothing is uploaded. Nothing phones home.
   <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>K</kbd>
 </p>
 
