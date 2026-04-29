@@ -7,6 +7,7 @@ import type {
   MatterNote,
   Draft,
   AudioTrack,
+  SpreadsheetWorkbook,
 } from '@/types';
 
 interface CircuitusDB {
@@ -50,13 +51,20 @@ interface CircuitusDB {
       'by-addedAt': string;
     };
   };
+  workbooks: {
+    key: string;
+    value: SpreadsheetWorkbook;
+    indexes: {
+      'by-updatedAt': string;
+    };
+  };
 }
 
 let dbPromise: Promise<IDBPDatabase<CircuitusDB>> | null = null;
 
 function getDB() {
   if (!dbPromise) {
-    dbPromise = openDB<CircuitusDB>('circuitus-db', 4, {
+    dbPromise = openDB<CircuitusDB>('circuitus-db', 5, {
       upgrade(db, oldVersion) {
         if (oldVersion < 1) {
           const docStore = db.createObjectStore('documents', { keyPath: 'id' });
@@ -79,6 +87,10 @@ function getDB() {
         if (oldVersion < 4) {
           const trackStore = db.createObjectStore('tracks', { keyPath: 'id' });
           trackStore.createIndex('by-addedAt', 'addedAt');
+        }
+        if (oldVersion < 5) {
+          const wbStore = db.createObjectStore('workbooks', { keyPath: 'id' });
+          wbStore.createIndex('by-updatedAt', 'updatedAt');
         }
       },
     });
@@ -212,4 +224,26 @@ export async function getAllTracks(): Promise<AudioTrack[]> {
 export async function deleteTrack(id: string): Promise<void> {
   const db = await getDB();
   await db.delete('tracks', id);
+}
+
+// Spreadsheet workbooks
+export async function saveWorkbook(wb: SpreadsheetWorkbook): Promise<void> {
+  const db = await getDB();
+  await db.put('workbooks', wb);
+}
+
+export async function getWorkbook(id: string): Promise<SpreadsheetWorkbook | undefined> {
+  const db = await getDB();
+  return db.get('workbooks', id);
+}
+
+export async function getAllWorkbooks(): Promise<SpreadsheetWorkbook[]> {
+  const db = await getDB();
+  const all = await db.getAll('workbooks');
+  return all.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+}
+
+export async function deleteWorkbook(id: string): Promise<void> {
+  const db = await getDB();
+  await db.delete('workbooks', id);
 }

@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import { lazy, Suspense, useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import TopBar from '@/components/TopBar';
 import Toolbar from '@/components/Toolbar';
 import Sidebar from '@/components/Sidebar';
@@ -8,12 +8,25 @@ import StatusBar from '@/components/StatusBar';
 import MatterTabs from '@/components/MatterTabs';
 import type { MatterTab } from '@/components/MatterTabs';
 import LibraryPage from '@/pages/LibraryPage';
-import TemplatesPage from '@/pages/TemplatesPage';
-import AuthoritiesFeedPage from '@/pages/AuthoritiesFeedPage';
-import CompliancePage from '@/pages/CompliancePage';
-import AudioLibraryPage from '@/pages/AudioLibraryPage';
 import NotesPane from '@/components/NotesPane';
 import IncomingCallOverlay from '@/components/IncomingCallOverlay';
+import AssistantButton from '@/components/AssistantButton';
+
+// Heavy pages get code-split — first paint loads only the practice-guide library.
+const TemplatesPage = lazy(() => import('@/pages/TemplatesPage'));
+const AuthoritiesFeedPage = lazy(() => import('@/pages/AuthoritiesFeedPage'));
+const CompliancePage = lazy(() => import('@/pages/CompliancePage'));
+const AudioLibraryPage = lazy(() => import('@/pages/AudioLibraryPage'));
+const ModelsPage = lazy(() => import('@/pages/ModelsPage'));
+const AssistantPanel = lazy(() => import('@/components/AssistantPanel'));
+
+function PageFallback() {
+  return (
+    <div className="flex-1 flex items-center justify-center bg-cream">
+      <div className="w-6 h-6 border-2 border-gold border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+}
 import { parseFile } from '@/lib/parsers';
 import { saveDocument, getDocument, saveHighlight, saveBookmark } from '@/lib/storage';
 import { useReadingPosition } from '@/hooks/useReadingPosition';
@@ -53,6 +66,7 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
   const [showNotes, setShowNotes] = useState(false);
   const [autoPilotEnabled, setAutoPilotEnabled] = useState(false);
   const [callVisible, setCallVisible] = useState(false);
+  const [assistantOpen, setAssistantOpen] = useState(false);
   const [activeChapterIndex, setActiveChapterIndex] = useState(0);
 
   // Document state
@@ -638,13 +652,25 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
         )}
 
         {activeNav === 'Templates' ? (
-          <TemplatesPage />
+          <Suspense fallback={<PageFallback />}>
+            <TemplatesPage />
+          </Suspense>
         ) : activeNav === 'Authorities' ? (
-          <AuthoritiesFeedPage />
+          <Suspense fallback={<PageFallback />}>
+            <AuthoritiesFeedPage />
+          </Suspense>
         ) : activeNav === 'Compliance' ? (
-          <CompliancePage />
+          <Suspense fallback={<PageFallback />}>
+            <CompliancePage />
+          </Suspense>
         ) : activeNav === 'Audio' ? (
-          <AudioLibraryPage />
+          <Suspense fallback={<PageFallback />}>
+            <AudioLibraryPage />
+          </Suspense>
+        ) : activeNav === 'Models' ? (
+          <Suspense fallback={<PageFallback />}>
+            <ModelsPage />
+          </Suspense>
         ) : isReading ? (
           <ContentArea
             isEmpty={false}
@@ -704,6 +730,12 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
       />
 
       <IncomingCallOverlay visible={callVisible} onDismiss={() => setCallVisible(false)} />
+      <AssistantButton onClick={() => setAssistantOpen(true)} />
+      {assistantOpen && (
+        <Suspense fallback={null}>
+          <AssistantPanel open={assistantOpen} onClose={() => setAssistantOpen(false)} />
+        </Suspense>
+      )}
     </div>
   );
 }
