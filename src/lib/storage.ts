@@ -1,5 +1,13 @@
 import { openDB, type IDBPDatabase } from 'idb';
-import type { StoredDocument, Bookmark, Highlight, ReadingPosition, MatterNote } from '@/types';
+import type {
+  StoredDocument,
+  Bookmark,
+  Highlight,
+  ReadingPosition,
+  MatterNote,
+  Draft,
+  AudioTrack,
+} from '@/types';
 
 interface CircuitusDB {
   documents: {
@@ -28,13 +36,27 @@ interface CircuitusDB {
     key: string;
     value: MatterNote;
   };
+  drafts: {
+    key: string;
+    value: Draft;
+    indexes: {
+      'by-updatedAt': string;
+    };
+  };
+  tracks: {
+    key: string;
+    value: AudioTrack;
+    indexes: {
+      'by-addedAt': string;
+    };
+  };
 }
 
 let dbPromise: Promise<IDBPDatabase<CircuitusDB>> | null = null;
 
 function getDB() {
   if (!dbPromise) {
-    dbPromise = openDB<CircuitusDB>('circuitus-db', 2, {
+    dbPromise = openDB<CircuitusDB>('circuitus-db', 4, {
       upgrade(db, oldVersion) {
         if (oldVersion < 1) {
           const docStore = db.createObjectStore('documents', { keyPath: 'id' });
@@ -49,6 +71,14 @@ function getDB() {
         }
         if (oldVersion < 2) {
           db.createObjectStore('notes', { keyPath: 'documentId' });
+        }
+        if (oldVersion < 3) {
+          const draftStore = db.createObjectStore('drafts', { keyPath: 'id' });
+          draftStore.createIndex('by-updatedAt', 'updatedAt');
+        }
+        if (oldVersion < 4) {
+          const trackStore = db.createObjectStore('tracks', { keyPath: 'id' });
+          trackStore.createIndex('by-addedAt', 'addedAt');
         }
       },
     });
@@ -143,4 +173,43 @@ export async function saveNote(note: MatterNote): Promise<void> {
 export async function getNote(documentId: string): Promise<MatterNote | undefined> {
   const db = await getDB();
   return db.get('notes', documentId);
+}
+
+// Drafts (rich-text working documents in the Templates tab)
+export async function saveDraft(draft: Draft): Promise<void> {
+  const db = await getDB();
+  await db.put('drafts', draft);
+}
+
+export async function getDraft(id: string): Promise<Draft | undefined> {
+  const db = await getDB();
+  return db.get('drafts', id);
+}
+
+export async function getAllDrafts(): Promise<Draft[]> {
+  const db = await getDB();
+  const all = await db.getAll('drafts');
+  return all.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+}
+
+export async function deleteDraft(id: string): Promise<void> {
+  const db = await getDB();
+  await db.delete('drafts', id);
+}
+
+// Audio tracks
+export async function saveTrack(track: AudioTrack): Promise<void> {
+  const db = await getDB();
+  await db.put('tracks', track);
+}
+
+export async function getAllTracks(): Promise<AudioTrack[]> {
+  const db = await getDB();
+  const all = await db.getAll('tracks');
+  return all.sort((a, b) => b.addedAt.localeCompare(a.addedAt));
+}
+
+export async function deleteTrack(id: string): Promise<void> {
+  const db = await getDB();
+  await db.delete('tracks', id);
 }

@@ -138,4 +138,53 @@
   mark.highlight-green {
     @apply bg-green-200/70 rounded-sm px-0.5;
   }
+
+  /* Tiptap editor styling */
+  .tiptap-editor .ProseMirror {
+    @apply outline-none min-h-[60vh] font-serif;
+    font-size: 14.5px;
+    line-height: 1.85;
+  }
+
+  .tiptap-editor .ProseMirror p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    @apply text-text-muted/50 float-left h-0 pointer-events-none;
+  }
+
+  .tiptap-editor .ProseMirror h1,
+  .tiptap-editor .ProseMirror h2,
+  .tiptap-editor .ProseMirror h3 {
+    @apply font-serif font-bold text-navy;
+  }
+
+  .tiptap-editor .ProseMirror h2 {
+    @apply text-lg border-b border-border pb-2 mt-8 mb-3;
+  }
+
+  .tiptap-editor .ProseMirror p {
+    @apply mb-4;
+  }
+
+  .tiptap-editor .ProseMirror ul,
+  .tiptap-editor .ProseMirror ol {
+    @apply ml-6 mb-4;
+  }
+
+  .tiptap-editor .ProseMirror ul { @apply list-disc; }
+  .tiptap-editor .ProseMirror ol { @apply list-decimal; }
+
+  .tiptap-editor .ProseMirror blockquote {
+    @apply border-l-4 border-gold/40 pl-4 py-2 my-4 bg-gold/5 italic;
+  }
+
+  /* Focus mode — dim non-active paragraphs */
+  .tiptap-focus-mode .ProseMirror > * {
+    @apply opacity-30 transition-opacity duration-300;
+  }
+
+  .tiptap-focus-mode .ProseMirror > *:has(:focus),
+  .tiptap-focus-mode .ProseMirror > *.has-focus,
+  .tiptap-focus-mode .ProseMirror:focus-within > *:focus-within {
+    @apply opacity-100;
+  }
 }

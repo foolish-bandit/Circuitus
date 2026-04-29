@@ -1,7 +1,7 @@
 import { Search } from 'lucide-react';
 import { getCurrentUser } from '@/lib/auth';
 
-const NAV_ITEMS = ['Practice Guides', 'Templates', 'Authorities', 'Compliance'];
+const NAV_ITEMS = ['Practice Guides', 'Templates', 'Authorities', 'Compliance', 'Audio'];
 
 interface TopBarProps {
   onLogout: () => void;
