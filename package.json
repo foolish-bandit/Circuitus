@@ -29,7 +29,7 @@
     "jszip": "^3.10.1",
     "lucide-react": "^0.400.0",
     "monaco-editor": "^0.55.1",
-    "pdfjs-dist": "3.11.174",
+    "pdfjs-dist": "4.2.67",
     "react": "^19.2.4",
     "react-chessboard": "^5.10.0",
     "react-dom": "^19.2.4"
