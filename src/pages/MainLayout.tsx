@@ -622,21 +622,29 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
 
       {importError && (
         <div
-          className="bg-red-50 border-b border-red-200 px-4 py-2 flex items-center justify-between flex-shrink-0 cursor-pointer"
+          className="bg-claret/5 px-5 py-2 flex items-center justify-between flex-shrink-0 cursor-pointer"
+          style={{ borderBottom: '1px solid rgba(122, 30, 46, 0.25)' }}
           onClick={() => setImportError(null)}
         >
-          <span className="text-xs font-sans text-red-700">{importError}</span>
-          <span className="text-xs font-sans text-red-400 ml-4">✕</span>
+          <span className="font-serif text-[12px] italic text-claret-dark">
+            <span className="smcp not-italic mr-2">Notice —</span>
+            {importError}
+          </span>
+          <span className="font-mono text-[11px] text-claret/60 ml-4">×</span>
         </div>
       )}
 
       {exportToast && (
         <div
-          className="bg-green-50 border-b border-green-200 px-4 py-2 flex items-center justify-between flex-shrink-0 cursor-pointer"
+          className="bg-brass/5 px-5 py-2 flex items-center justify-between flex-shrink-0 cursor-pointer"
+          style={{ borderBottom: '1px solid rgba(156, 122, 31, 0.3)' }}
           onClick={() => setExportToast(null)}
         >
-          <span className="text-xs font-sans text-green-700">{exportToast}</span>
-          <span className="text-xs font-sans text-green-400 ml-4">✕</span>
+          <span className="font-serif text-[12px] italic text-ink">
+            <span className="smcp not-italic mr-2 text-brass">Filed —</span>
+            {exportToast}
+          </span>
+          <span className="font-mono text-[11px] text-brass/60 ml-4">×</span>
         </div>
       )}
 
