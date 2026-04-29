@@ -31,11 +31,26 @@ function formatDuration(s: number): string {
   return `${m}:${String(ss).padStart(2, '0')}`;
 }
 
+/** Restrict media URLs to safe protocols. Returns null for anything else. */
+function safeMediaUrl(input: string): string | null {
+  try {
+    const u = new URL(input);
+    if (u.protocol === 'http:' || u.protocol === 'https:' || u.protocol === 'blob:') {
+      return u.toString();
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 async function probeDuration(src: string): Promise<number> {
+  const safe = safeMediaUrl(src);
+  if (!safe) return 0;
   return new Promise((resolve) => {
     const a = document.createElement('audio');
     a.preload = 'metadata';
-    a.src = src;
+    a.src = safe;
     a.onloadedmetadata = () => resolve(a.duration || 0);
     a.onerror = () => resolve(0);
   });
@@ -144,13 +159,15 @@ export default function AudioLibraryPage() {
 
   async function handleAddUrl() {
     if (!urlInput.trim() || !titleInput.trim()) return;
-    const dur = await probeDuration(urlInput);
+    const safe = safeMediaUrl(urlInput.trim());
+    if (!safe) return;
+    const dur = await probeDuration(safe);
     const id = crypto.randomUUID();
     const track: AudioTrack = {
       id,
       title: titleInput,
       presenter: pickPresenter(id),
-      source: { kind: 'url', url: urlInput },
+      source: { kind: 'url', url: safe },
       durationSec: dur,
       addedAt: new Date().toISOString(),
     };
