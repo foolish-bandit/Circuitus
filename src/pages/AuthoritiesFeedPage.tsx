@@ -150,7 +150,7 @@ export default function AuthoritiesFeedPage() {
 
           {loading && stories.length === 0 && (
             <div className="text-center py-16">
-              <div className="w-6 h-6 border-2 border-gold border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+              <span className="editorial-loader mx-auto mb-3" aria-hidden />
               <p className="text-xs font-sans text-text-muted">Loading advance sheets…</p>
             </div>
           )}

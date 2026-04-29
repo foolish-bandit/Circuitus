@@ -71,8 +71,8 @@ export default function TopBar({
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && onSearchSubmit()}
-              placeholder="Search guides, templates, authorities…"
-              aria-label="Search guides, templates, authorities"
+              placeholder="Search Practice Library…"
+              aria-label="Search Practice Library"
               className="w-full bg-paper/[0.06] border border-paper/15 pl-9 pr-3 py-1.5 text-[12px] text-paper placeholder-paper/35 font-sans focus:outline-none focus:border-brass-bright/60 focus:bg-paper/[0.10] transition-colors"
               style={{ borderRadius: 1 }}
             />
@@ -81,8 +81,8 @@ export default function TopBar({
 
         <span className="hidden md:block w-px h-7 bg-paper/15 flex-shrink-0" aria-hidden />
 
-        {/* Nav — small caps, brass underline on active */}
-        <nav className="flex items-center gap-1 flex-shrink-0">
+        {/* Nav — small caps, brass underline on active. Wraps to second row on narrow. */}
+        <nav className="hidden lg:flex items-center gap-1 flex-shrink-0">
           {NAV_ITEMS.map((item) => (
             <button
               key={item}
@@ -109,6 +109,21 @@ export default function TopBar({
           ))}
         </nav>
 
+        {/* Compact nav for narrow viewports */}
+        <select
+          value={activeNav}
+          onChange={(e) => onNavChange(e.target.value)}
+          className="lg:hidden bg-paper/[0.06] border border-paper/15 text-paper text-[10px] font-sans uppercase tracking-marque px-2 py-1 focus:outline-none focus:border-brass-bright/60"
+          aria-label="Section"
+          style={{ borderRadius: 1 }}
+        >
+          {NAV_ITEMS.map((item) => (
+            <option key={item} value={item} className="bg-navy text-paper">
+              {item}
+            </option>
+          ))}
+        </select>
+
         {/* User — initials in a brass-bordered seal */}
         <div className="flex items-center gap-3 flex-shrink-0 pl-4 ml-1 border-l border-paper/15">
           <div
@@ -123,7 +138,7 @@ export default function TopBar({
           </div>
           <button
             onClick={onLogout}
-            className="font-sans text-[9.5px] uppercase tracking-marque text-paper/45 hover:text-paper transition-colors"
+            className="hidden sm:inline font-sans text-[9.5px] uppercase tracking-marque text-paper/45 hover:text-paper transition-colors"
           >
             Sign Out
           </button>

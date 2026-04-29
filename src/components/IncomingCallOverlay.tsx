@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Phone, PhoneOff, MicOff, Mic, Video, VideoOff } from 'lucide-react';
+import { Phone, PhoneOff, MicOff, Mic, Video, VideoOff, X } from 'lucide-react';
 
 interface IncomingCallOverlayProps {
   /** When true, the overlay is visible. The overlay only mounts while visible
@@ -44,77 +44,131 @@ function OverlayBody({ onDismiss }: OverlayBodyProps) {
 
   const mm = String(Math.floor(elapsed / 60)).padStart(2, '0');
   const ss = String(elapsed % 60).padStart(2, '0');
+  const initials = caller.name
+    .split(' ')
+    .map((p) => p.charAt(0))
+    .join('')
+    .slice(0, 2);
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-sm">
-      <div className="w-[420px] bg-[#1c2733] border border-white/10 rounded-xl shadow-2xl overflow-hidden">
-        <div className="px-5 pt-5 pb-3 text-center">
-          <p className="text-[10px] font-sans uppercase tracking-[0.25em] text-white/50 mb-3">
-            {accepted ? 'Connected · Privileged Channel' : 'Incoming Privileged Call'}
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-ink/90 backdrop-blur-sm">
+      <div
+        className="w-[440px] bg-paper relative"
+        style={{
+          border: '1px solid #9C7A1F',
+          boxShadow:
+            'inset 0 0 0 1px rgba(184, 147, 43, 0.15), 0 24px 64px -16px rgba(0,0,0,0.5)',
+        }}
+      >
+        {/* Header bar */}
+        <div
+          className="flex items-center justify-between px-5 py-2.5 bg-paper-cool"
+          style={{ borderBottom: '1px solid #D9D2C0' }}
+        >
+          <p className="kicker-brass">
+            {accepted ? '● Connected · Privileged Channel' : 'Incoming · Privileged Call'}
           </p>
-          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-navy to-navy-dark border border-gold/30 mx-auto flex items-center justify-center text-gold font-serif text-2xl mb-3">
-            {caller.name.split(' ').map((p) => p.charAt(0)).join('').slice(0, 2)}
+          <button
+            onClick={onDismiss}
+            className="text-ink-muted hover:text-claret transition-colors"
+            aria-label="Dismiss"
+            title="Dismiss"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        {/* Brass double-rule signature */}
+        <div className="rule-double" aria-hidden />
+
+        {/* Caller body */}
+        <div className="px-7 pt-7 pb-4 text-center">
+          <div
+            className="w-20 h-20 mx-auto flex items-center justify-center text-brass-bright font-display italic text-2xl mb-4"
+            style={{
+              border: '1px solid #9C7A1F',
+              background: 'rgba(156, 122, 31, 0.06)',
+              boxShadow: 'inset 0 0 0 1px rgba(156, 122, 31, 0.15)',
+            }}
+            aria-hidden
+          >
+            {initials}
           </div>
-          <p className="text-white font-serif text-lg">{caller.name}</p>
-          <p className="text-white/50 text-xs font-sans mt-1">{caller.org}</p>
+          <p className="font-display text-[20px] text-ink leading-tight">{caller.name}</p>
+          <p className="font-serif italic text-[12.5px] text-ink-muted mt-1">{caller.org}</p>
           {accepted && (
-            <p className="text-gold font-mono text-xs mt-3">{mm}:{ss}</p>
+            <p className="font-mono text-[12px] text-brass mt-4 tracking-wider">
+              {mm}:{ss}
+            </p>
           )}
         </div>
 
+        {/* Action buttons */}
         {accepted ? (
-          <div className="flex items-center justify-center gap-3 px-5 pb-5 pt-2">
+          <div className="flex items-stretch" style={{ borderTop: '1px solid #D9D2C0' }}>
             <button
               onClick={() => setMuted((m) => !m)}
-              className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
-                muted ? 'bg-white/10 text-white/70' : 'bg-white text-navy'
+              className={`flex-1 flex flex-col items-center gap-1 py-3 transition-colors ${
+                muted ? 'text-ink-muted hover:text-ink' : 'text-brass'
               }`}
+              style={{ borderRight: '1px solid #D9D2C0' }}
               title={muted ? 'Unmute' : 'Mute'}
             >
-              {muted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+              {muted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+              <span className="kicker">{muted ? 'Muted' : 'Live'}</span>
             </button>
             <button
               onClick={() => setVideo((v) => !v)}
-              className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
-                video ? 'bg-white text-navy' : 'bg-white/10 text-white/70'
+              className={`flex-1 flex flex-col items-center gap-1 py-3 transition-colors ${
+                video ? 'text-brass' : 'text-ink-muted hover:text-ink'
               }`}
+              style={{ borderRight: '1px solid #D9D2C0' }}
               title={video ? 'Stop video' : 'Start video'}
             >
-              {video ? <Video className="w-5 h-5" /> : <VideoOff className="w-5 h-5" />}
+              {video ? <Video className="w-4 h-4" /> : <VideoOff className="w-4 h-4" />}
+              <span className="kicker">Video</span>
             </button>
             <button
               onClick={onDismiss}
-              className="w-12 h-12 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center"
+              className="flex-1 flex flex-col items-center gap-1 py-3 text-claret hover:bg-claret/5 transition-colors"
               title="End call"
             >
-              <PhoneOff className="w-5 h-5" />
+              <PhoneOff className="w-4 h-4" />
+              <span className="kicker text-claret">End Call</span>
             </button>
           </div>
         ) : (
-          <div className="flex items-center justify-center gap-6 px-5 pb-5 pt-2">
+          <div className="flex items-stretch" style={{ borderTop: '1px solid #D9D2C0' }}>
             <button
               onClick={onDismiss}
-              className="w-14 h-14 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center"
+              className="flex-1 flex flex-col items-center gap-1.5 py-4 text-claret hover:bg-claret/5 transition-colors"
+              style={{ borderRight: '1px solid #D9D2C0' }}
               title="Decline"
             >
-              <PhoneOff className="w-6 h-6" />
+              <PhoneOff className="w-5 h-5" />
+              <span className="kicker text-claret">Decline</span>
             </button>
             <button
               onClick={() => {
                 setAccepted(true);
                 setMuted(true);
               }}
-              className="w-14 h-14 rounded-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center"
+              className="flex-1 flex flex-col items-center gap-1.5 py-4 text-emerald-700 hover:bg-emerald-700/5 transition-colors"
               title="Accept (muted)"
             >
-              <Phone className="w-6 h-6" />
+              <Phone className="w-5 h-5" />
+              <span className="kicker text-emerald-700">Accept · Muted</span>
             </button>
           </div>
         )}
 
-        <div className="bg-black/40 px-5 py-2 text-center">
-          <p className="text-[9px] font-mono text-white/30 tracking-wider">
-            CIRCUITUS SECURE VOICE · END-TO-END ENCRYPTED
+        {/* Footer */}
+        <div
+          className="bg-paper-cool px-5 py-2 text-center"
+          style={{ borderTop: '1px solid #D9D2C0' }}
+        >
+          <p className="font-mono text-[9px] text-ink-muted/70 tracking-marque">
+            <span className="text-brass">§</span> CIRCUITUS SECURE VOICE · END-TO-END
           </p>
         </div>
       </div>

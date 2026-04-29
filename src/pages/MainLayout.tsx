@@ -11,6 +11,7 @@ import LibraryPage from '@/pages/LibraryPage';
 import NotesPane from '@/components/NotesPane';
 import IncomingCallOverlay from '@/components/IncomingCallOverlay';
 import AssistantButton from '@/components/AssistantButton';
+import ShortcutsOverlay from '@/components/ShortcutsOverlay';
 
 // Heavy pages get code-split — first paint loads only the practice-guide library.
 const TemplatesPage = lazy(() => import('@/pages/TemplatesPage'));
@@ -23,7 +24,7 @@ const AssistantPanel = lazy(() => import('@/components/AssistantPanel'));
 function PageFallback() {
   return (
     <div className="flex-1 flex items-center justify-center bg-cream">
-      <div className="w-6 h-6 border-2 border-gold border-t-transparent rounded-full animate-spin" />
+      <span className="editorial-loader" aria-hidden />
     </div>
   );
 }
@@ -67,6 +68,7 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
   const [autoPilotEnabled, setAutoPilotEnabled] = useState(false);
   const [callVisible, setCallVisible] = useState(false);
   const [assistantOpen, setAssistantOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [activeChapterIndex, setActiveChapterIndex] = useState(0);
 
   // Document state
@@ -91,7 +93,8 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
   const [activeTabId, setActiveTabId] = useState<string | null>(matterTabs[0]?.id ?? null);
 
   // Quick-reference cover
-  const { isQuickRef, destination, chord, saveQuickRefState } = useQuickRef();
+  const { isQuickRef, destination, chord, saveQuickRefState, getPreState } = useQuickRef();
+  const wasQuickRefRef = useRef(false);
   const quickRefDoc = useMemo(
     () => _standinDocs.find((d) => d.id === destination.docId) ?? _standinDocs[0],
     [destination.docId],
@@ -135,14 +138,16 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
 
   const [initialScrollPercent, setInitialScrollPercent] = useState(0);
 
-  // Save state on entering quick-ref so the user can recover their place
+  // Save state on entering quick-ref. The matching restore effect lives below,
+  // after `handleStandinClick` and `openDocument` are declared.
   useEffect(() => {
-    if (isQuickRef) {
+    if (isQuickRef && !wasQuickRefRef.current) {
       saveQuickRefState(
         scrollContainerRef.current?.scrollTop ?? 0,
         currentDoc?.id ?? null,
         activeTabId,
       );
+      wasQuickRefRef.current = true;
     }
   }, [isQuickRef, currentDoc, activeTabId, saveQuickRefState]);
 
@@ -172,12 +177,22 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
     return () => clearTimeout(timer);
   }, [exportToast]);
 
-  // Dismiss search results on Escape
+  // Dismiss search results on Escape; open shortcut sheet on ?
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === 'Escape') {
         setSearchResults(null);
         setSearchQuery('');
+      } else if (e.key === '?') {
+        // Don't intercept inside inputs/editors
+        const target = e.target as HTMLElement;
+        if (
+          target instanceof HTMLInputElement ||
+          target instanceof HTMLTextAreaElement ||
+          target.isContentEditable
+        ) return;
+        e.preventDefault();
+        setShortcutsOpen((p) => !p);
       }
     }
     window.addEventListener('keydown', handleKeyDown);
@@ -328,6 +343,31 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
     },
     [activeTabId, handleStandinClick, openDocument],
   );
+
+  // Restore prior state when quick-ref toggles off. Restoring tab + scroll is
+  // a real side-effect (re-opens a document, mutates scrollTop) so the effect
+  // pattern is the right home; the rule's "no setState in effect" warning
+  // doesn't apply to genuine external-side-effect work.
+  useEffect(() => {
+    if (!isQuickRef && wasQuickRefRef.current) {
+      wasQuickRefRef.current = false;
+      const pre = getPreState();
+      if (pre.activeTab && pre.activeTab !== activeTabId) {
+        const standin = _standinDocs.find((d) => d.id === pre.activeTab);
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- restoring user-saved nav state
+        if (standin) handleStandinClick(standin);
+        else if (pre.documentId) void openDocument(pre.documentId);
+      }
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (scrollContainerRef.current && pre.scrollTop > 0) {
+            scrollContainerRef.current.scrollTop = pre.scrollTop;
+          }
+        });
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isQuickRef]);
 
   const handleTabClose = useCallback(
     (tabId: string) => {
@@ -554,7 +594,7 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white border border-border rounded-b-lg shadow-lg">
             {searchLoading ? (
               <div className="px-4 py-3 flex items-center gap-2">
-                <div className="w-3 h-3 border-2 border-gold border-t-transparent rounded-full animate-spin" />
+                <span className="editorial-loader" style={{ width: 24 }} aria-hidden />
                 <span className="text-xs font-sans text-text-muted">
                   Searching Circuitus library...
                 </span>
@@ -605,17 +645,19 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
         onTriggerCall={handleTriggerCall}
       />
 
-      <MatterTabs
-        tabs={matterTabs}
-        activeTabId={activeTabId}
-        onTabClick={handleTabClick}
-        onTabClose={handleTabClose}
-        onAddTab={handleImport}
-      />
+      {activeNav === 'Practice Guides' && (
+        <MatterTabs
+          tabs={matterTabs}
+          activeTabId={activeTabId}
+          onTabClick={handleTabClick}
+          onTabClose={handleTabClose}
+          onAddTab={handleImport}
+        />
+      )}
 
       {importing && (
         <div className="bg-white border-b border-border px-4 py-2 flex items-center gap-3 flex-shrink-0">
-          <div className="w-4 h-4 border-2 border-gold border-t-transparent rounded-full animate-spin" />
+          <span className="editorial-loader" aria-hidden />
           <span className="text-xs font-sans text-text-muted">{importStatus}</span>
         </div>
       )}
@@ -649,7 +691,7 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
       )}
 
       <div className="flex flex-1 overflow-hidden">
-        {!hideLeftSidebar && (
+        {activeNav === 'Practice Guides' && !hideLeftSidebar && (
           <Sidebar
             chapters={activeChaptersForSidebar}
             activeChapterIndex={activeChapterIndex}
@@ -718,7 +760,7 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
           />
         )}
 
-        {showRightSidebar && !hideRightSidebar && (
+        {activeNav === 'Practice Guides' && showRightSidebar && !hideRightSidebar && (
           <AuthoritiesSidebar
             documents={sidebarDocs}
             onDocumentClick={handleStandinClick}
@@ -727,7 +769,7 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
         )}
       </div>
 
-      <StatusBar shortcutHint={shortcutHint} />
+      <StatusBar shortcutHint={shortcutHint} autoPilotEnabled={autoPilotEnabled} />
 
       <input
         ref={fileInputRef}
@@ -744,6 +786,11 @@ export default function MainLayout({ onLogout }: MainLayoutProps) {
           <AssistantPanel open={assistantOpen} onClose={() => setAssistantOpen(false)} />
         </Suspense>
       )}
+      <ShortcutsOverlay
+        open={shortcutsOpen}
+        onClose={() => setShortcutsOpen(false)}
+        quickRefChord={shortcutHint}
+      />
     </div>
   );
 }

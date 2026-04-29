@@ -18,12 +18,11 @@ export default function AssistantButton({ onClick }: AssistantButtonProps) {
       title="Open Circuitus Assistant"
     >
       <span
-        className="w-7 h-7 flex items-center justify-center text-brass-bright"
-        style={{ borderRight: '1px solid rgba(184, 147, 43, 0.35)', paddingRight: 8 }}
+        className="w-7 h-7 flex items-center justify-center text-brass-bright sm:pr-2 sm:border-r sm:border-brass/35"
       >
         <Sparkles className="w-3.5 h-3.5" />
       </span>
-      <span className="text-left">
+      <span className="hidden sm:block text-left">
         <span className="block font-display text-[14px] leading-none">Ask Circuitus</span>
         <span className="block font-mono text-[8.5px] tracking-marque uppercase text-paper/55 mt-1">
           On-Device · Privileged

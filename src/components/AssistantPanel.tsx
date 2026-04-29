@@ -91,46 +91,65 @@ export default function AssistantPanel({ open, onClose }: AssistantPanelProps) {
 
       {/* Panel */}
       <aside
-        className={`fixed right-0 top-0 bottom-0 z-50 w-full sm:w-[440px] bg-white border-l border-border shadow-2xl flex flex-col transition-transform ${
+        className={`fixed right-0 top-0 bottom-0 z-50 w-full sm:w-[460px] bg-paper-cool flex flex-col transition-transform ${
           open ? 'translate-x-0' : 'translate-x-full'
         }`}
+        style={{
+          borderLeft: '1px solid #9C7A1F',
+          boxShadow: '-24px 0 64px -32px rgba(14,17,22,0.35)',
+        }}
       >
-        <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-gradient-to-r from-navy-dark to-navy text-white">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-gold" />
-            <div>
-              <p className="font-serif text-base font-bold leading-none">Circuitus Assistant</p>
-              <p className="text-[9px] font-mono uppercase tracking-wider text-gold/80 mt-0.5">
-                On-Device · Privileged Channel
-              </p>
+        <div className="bg-navy text-paper">
+          <div className="flex items-center justify-between px-5 py-3.5">
+            <div className="flex items-center gap-3">
+              <span
+                className="w-7 h-7 flex items-center justify-center text-brass-bright"
+                style={{
+                  border: '1px solid rgba(184, 147, 43, 0.5)',
+                  background: 'rgba(184, 147, 43, 0.08)',
+                }}
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+              </span>
+              <div className="leading-none">
+                <p className="font-display text-[16px] leading-none">Circuitus Assistant</p>
+                <p className="font-sans text-[8.5px] tracking-marque uppercase text-brass-bright/85 mt-1">
+                  On-Device · Privileged Channel
+                </p>
+              </div>
             </div>
+            <button
+              onClick={onClose}
+              className="p-1 text-paper/65 hover:text-brass-bright transition-colors"
+              title="Close assistant"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1 text-white/70 hover:text-white"
-            title="Close assistant"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          <div className="rule-double" aria-hidden />
         </div>
 
-        <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
           {messages.length === 0 && !loading && (
-            <div className="text-center py-6">
-              <div className="w-12 h-12 mx-auto rounded-full bg-navy/5 flex items-center justify-center mb-3">
-                <Sparkles className="w-5 h-5 text-navy" />
-              </div>
-              <p className="font-serif text-base text-navy mb-1">How can I help?</p>
-              <p className="text-[11px] font-sans text-text-muted leading-relaxed mb-4 max-w-xs mx-auto">
-                Powered by an on-device language model. No queries leave this browser.
+            <div className="text-center py-4">
+              <p className="kicker-brass mb-3">
+                <span className="inline-block w-5 h-px bg-brass align-middle mr-2.5" />
+                Ask of Counsel
+                <span className="inline-block w-5 h-px bg-brass align-middle ml-2.5" />
+              </p>
+              <p className="font-display text-[18px] text-ink mb-1">How may I assist you?</p>
+              <p className="font-serif italic text-[12px] text-ink-muted leading-relaxed mb-5 max-w-xs mx-auto">
+                Inference runs entirely on this device. No queries leave the browser.
               </p>
               <div className="space-y-2 text-left">
                 {SUGGESTED_PROMPTS.map((p) => (
                   <button
                     key={p}
                     onClick={() => send(p)}
-                    className="w-full text-left text-[11px] font-sans text-text-main bg-cream border border-border rounded px-3 py-2 hover:border-gold/50 hover:bg-cream/80"
+                    className="w-full text-left font-serif text-[12.5px] italic text-ink bg-paper px-3.5 py-2.5 hover:bg-paper-warm transition-colors"
+                    style={{ border: '1px solid #D9D2C0', borderRadius: 0 }}
                   >
+                    <span className="text-brass not-italic mr-1.5">›</span>
                     {p}
                   </button>
                 ))}
@@ -139,30 +158,39 @@ export default function AssistantPanel({ open, onClose }: AssistantPanelProps) {
           )}
 
           {loading && messages.length === 0 && (
-            <div className="text-center py-6">
-              <Loader2 className="w-6 h-6 text-gold mx-auto animate-spin mb-3" />
-              <p className="font-serif text-sm text-navy">Initializing on-device model</p>
-              <p className="text-[10px] font-mono text-text-muted mt-2">
+            <div className="text-center py-8">
+              <span className="editorial-loader mb-4" aria-hidden />
+              <p className="font-display text-[15px] text-ink mt-3">Initializing model</p>
+              <p className="font-serif italic text-[11.5px] text-ink-muted mt-2">
                 {progress?.text ?? 'Preparing inference engine…'}
               </p>
-              <div className="w-48 mx-auto h-1 bg-border rounded-full mt-3 overflow-hidden">
-                <div
-                  className="h-full bg-gold transition-all"
-                  style={{ width: `${loadPercent}%` }}
-                />
+              <div
+                className="w-48 mx-auto h-px mt-4"
+                style={{ background: '#D9D2C0' }}
+              >
+                <div className="h-px bg-brass transition-all" style={{ width: `${loadPercent}%` }} />
               </div>
-              <p className="text-[10px] font-mono text-text-muted/70 mt-1">{loadPercent}%</p>
+              <p className="font-mono text-[10px] text-ink-muted/70 mt-2">{loadPercent}%</p>
+              <p className="font-mono text-[9px] text-ink-muted/50 mt-3 max-w-[260px] mx-auto leading-relaxed">
+                First open downloads ~700MB of weights into the browser cache.
+                Subsequent opens are instant.
+              </p>
             </div>
           )}
 
           {messages.map((m, i) => (
             <div key={i} className={m.role === 'user' ? 'flex justify-end' : ''}>
               <div
-                className={`max-w-[85%] rounded-lg px-3 py-2 ${
+                className={`max-w-[88%] px-3.5 py-2.5 ${
                   m.role === 'user'
-                    ? 'bg-navy text-white font-sans text-[12px]'
-                    : 'bg-cream border border-border font-serif text-[13px] text-text-main leading-relaxed'
+                    ? 'bg-navy text-paper font-sans text-[12px]'
+                    : 'bg-paper font-serif text-[13.5px] text-ink leading-relaxed'
                 }`}
+                style={
+                  m.role === 'user'
+                    ? { borderRadius: 0 }
+                    : { border: '1px solid #D9D2C0', borderRadius: 0 }
+                }
               >
                 {m.content || (streaming && i === messages.length - 1 ? <span className="animate-pulse">▍</span> : '')}
               </div>
@@ -170,13 +198,22 @@ export default function AssistantPanel({ open, onClose }: AssistantPanelProps) {
           ))}
 
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded p-3 text-[11px] font-sans text-red-700">
-              {error}
+            <div
+              className="bg-claret/5 px-3 py-2.5"
+              style={{ border: '1px solid rgba(122, 30, 46, 0.3)' }}
+            >
+              <span className="font-serif text-[12px] italic text-claret-dark">
+                <span className="smcp not-italic mr-2">Notice —</span>
+                {error}
+              </span>
             </div>
           )}
         </div>
 
-        <div className="border-t border-border bg-cream/40 p-3 flex-shrink-0">
+        <div
+          className="bg-paper p-3.5 flex-shrink-0"
+          style={{ borderTop: '1px solid #D9D2C0' }}
+        >
           <div className="flex gap-2">
             <textarea
               value={input}
@@ -189,27 +226,33 @@ export default function AssistantPanel({ open, onClose }: AssistantPanelProps) {
               }}
               placeholder={modelReady ? 'Ask Circuitus…' : 'Loading model — type to queue your question…'}
               rows={2}
-              className="flex-1 resize-none bg-white border border-border rounded px-3 py-2 text-[12px] font-sans focus:outline-none focus:border-gold/50"
+              className="flex-1 resize-none bg-paper-cool px-3 py-2 text-[12.5px] font-sans focus:outline-none focus:border-brass transition-colors"
+              style={{ border: '1px solid #D9D2C0', borderRadius: 0 }}
             />
             <button
               onClick={() => send(input)}
               disabled={!input.trim() || streaming}
-              className="bg-navy text-white rounded px-3 disabled:opacity-40 hover:bg-navy-light"
+              className="bg-navy text-paper px-3 disabled:opacity-40 hover:bg-navy-dark transition-colors"
+              style={{
+                borderRadius: 0,
+                border: '1px solid #0A1F3D',
+                boxShadow: 'inset 0 0 0 1px rgba(184, 147, 43, 0.22)',
+              }}
               title="Send (Enter)"
             >
               {streaming ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             </button>
           </div>
           <div className="flex items-center justify-between mt-2">
-            <span className="text-[9px] font-mono text-text-muted/60">
+            <span className="font-mono text-[9px] text-ink-muted/60 tracking-wider">
               Llama-3.2-1B · q4f32 · WebGPU
             </span>
             {messages.length > 0 && (
               <button
                 onClick={clearChat}
-                className="text-[10px] font-sans text-text-muted hover:text-navy flex items-center gap-1"
+                className="font-sans text-[9.5px] uppercase tracking-marque text-ink-muted hover:text-claret flex items-center gap-1 transition-colors"
               >
-                Clear conversation <ChevronDown className="w-3 h-3" />
+                Clear · Conversation <ChevronDown className="w-3 h-3" />
               </button>
             )}
           </div>

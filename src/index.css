@@ -251,14 +251,14 @@
   /* Editorial "kicker" — masthead caps */
   .kicker {
     @apply font-sans font-semibold uppercase text-ink-muted;
-    letter-spacing: 0.22em;
-    font-size: 9.5px;
+    letter-spacing: 0.2em;
+    font-size: 10.5px;
   }
 
   .kicker-brass {
     @apply font-sans font-semibold uppercase text-brass;
-    letter-spacing: 0.22em;
-    font-size: 9.5px;
+    letter-spacing: 0.2em;
+    font-size: 10.5px;
   }
 
   /* Marginalia — pulled into the gutter on wide screens */
@@ -315,5 +315,73 @@
   .tiptap-focus-mode .ProseMirror > *.has-focus,
   .tiptap-focus-mode .ProseMirror:focus-within > *:focus-within {
     @apply opacity-100;
+  }
+
+  /* ── Excalidraw retheme ──────────────────────────────────────────── */
+  .circuitus-excalidraw {
+    --color-primary: #0A1F3D;
+    --color-primary-darker: #06152C;
+    --color-primary-darkest: #06152C;
+    --color-primary-light: #162E54;
+    --color-primary-light-darker: #0A1F3D;
+    --color-primary-hover: #162E54;
+    --color-promo: #9C7A1F;
+    --color-success: #5F915F;
+    --color-warning: #9C7A1F;
+    --color-danger: #7A1E2E;
+    --color-brand-hover: #B8932B;
+    --color-brand-active: #9C7A1F;
+  }
+  .circuitus-excalidraw .excalidraw {
+    --ui-font: "IBM Plex Sans", system-ui, sans-serif;
+  }
+  .circuitus-excalidraw .App-toolbar,
+  .circuitus-excalidraw .Stack {
+    background: rgba(245, 241, 232, 0.92) !important;
+    backdrop-filter: blur(4px);
+    border: 1px solid #D9D2C0 !important;
+    border-radius: 0 !important;
+  }
+
+  /* ── FortuneSheet retheme ───────────────────────────────────────── */
+  .circuitus-fortune {
+    --fortune-toolbar-bg: #FAF6EC;
+    --fortune-toolbar-icon-color: #5A6373;
+    --fortune-toolbar-icon-hover-color: #0A1F3D;
+    --fortune-tab-active-color: #9C7A1F;
+    --fortune-cell-selected-color: #9C7A1F;
+    background: #F5F1E8;
+  }
+  /* Ride over FortuneSheet's blue toolbar with neutral paper tones */
+  .circuitus-fortune .fortune-toolbar,
+  .circuitus-fortune .fortune-statistic,
+  .circuitus-fortune .fortune-sheettab-container {
+    background: #FAF6EC !important;
+    border-color: #D9D2C0 !important;
+  }
+  .circuitus-fortune .fortune-toolbar-button:hover,
+  .circuitus-fortune .fortune-sheettab-active {
+    background: #EFEAD9 !important;
+    color: #0A1F3D !important;
+  }
+
+  /* ── Editorial loading line — replaces circular spinners ────────── */
+  .editorial-loader {
+    width: 32px;
+    height: 1px;
+    background: linear-gradient(to right, transparent, #9C7A1F, transparent);
+    background-size: 50% 100%;
+    background-repeat: no-repeat;
+    animation: ed-loader-sweep 1.4s linear infinite;
+    display: inline-block;
+  }
+  @keyframes ed-loader-sweep {
+    0%   { background-position: -50% 0; }
+    100% { background-position: 150% 0; }
+  }
+
+  /* Lining figures override on chrome metadata so digits don't dance */
+  .kicker, .smcp, .font-mono {
+    font-feature-settings: "lnum", "kern";
   }
 }

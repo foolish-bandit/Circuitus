@@ -118,6 +118,14 @@ export async function getAllDocuments(): Promise<StoredDocument[]> {
   return all.sort((a, b) => (b.lastOpened || b.dateAdded).localeCompare(a.lastOpened || a.dateAdded));
 }
 
+export async function updateDocumentTitle(id: string, title: string): Promise<void> {
+  const db = await getDB();
+  const doc = await db.get('documents', id);
+  if (!doc) return;
+  doc.title = title;
+  await db.put('documents', doc);
+}
+
 export async function updateReadingPosition(id: string, position: ReadingPosition): Promise<void> {
   const db = await getDB();
   const doc = await db.get('documents', id);
