@@ -224,7 +224,7 @@ export default function ModelsPage() {
                 {savedAt ? `Saved ${new Date(savedAt).toLocaleTimeString()}` : 'Unsaved'}
               </span>
             </div>
-            <div className="flex-1 min-h-0">
+            <div className="flex-1 min-h-0 circuitus-fortune">
               <Workbook
                 key={active.id}
                 data={activeData as never}

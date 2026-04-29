@@ -1,6 +1,40 @@
 import { useMemo, useState } from 'react';
-import { DiffEditor } from '@monaco-editor/react';
+import { DiffEditor, type Monaco } from '@monaco-editor/react';
 import type { Draft } from '@/types';
+
+function defineCircuitusTheme(monaco: Monaco) {
+  monaco.editor.defineTheme('circuitus-light', {
+    base: 'vs',
+    inherit: true,
+    rules: [
+      { token: '', foreground: '0E1116', background: 'F5F1E8' },
+      { token: 'comment', foreground: '5A6373', fontStyle: 'italic' },
+    ],
+    colors: {
+      'editor.background': '#F5F1E8',
+      'editor.foreground': '#0E1116',
+      'editorLineNumber.foreground': '#B5AB95',
+      'editorLineNumber.activeForeground': '#9C7A1F',
+      'editor.lineHighlightBackground': '#EFEAD9',
+      'editor.lineHighlightBorder': '#00000000',
+      'editorGutter.background': '#FAF6EC',
+      'editorGutter.modifiedBackground': '#9C7A1F',
+      'editorGutter.addedBackground': '#5F915F',
+      'editorGutter.deletedBackground': '#7A1E2E',
+      'diffEditor.insertedTextBackground': 'rgba(95, 145, 95, 0.18)',
+      'diffEditor.removedTextBackground': 'rgba(122, 30, 46, 0.18)',
+      'diffEditor.insertedLineBackground': 'rgba(95, 145, 95, 0.10)',
+      'diffEditor.removedLineBackground': 'rgba(122, 30, 46, 0.10)',
+      'editorIndentGuide.background': '#E9E3D2',
+      'editor.selectionBackground': 'rgba(156, 122, 31, 0.22)',
+      'editorWidget.background': '#FAF6EC',
+      'editorWidget.border': '#D9D2C0',
+      'scrollbarSlider.background': 'rgba(14, 17, 22, 0.10)',
+      'scrollbarSlider.hoverBackground': 'rgba(14, 17, 22, 0.18)',
+      'diffEditor.border': '#D9D2C0',
+    },
+  });
+}
 
 interface DraftCompareProps {
   drafts: ReadonlyArray<Draft>;
@@ -39,15 +73,25 @@ export default function DraftCompare({ drafts, defaultLeftId }: DraftCompareProp
 
   return (
     <div className="flex-1 flex flex-col bg-white">
-      <div className="border-b border-border px-6 py-3 flex items-center gap-4 flex-shrink-0">
+      <div
+        className="px-6 py-3 flex items-center gap-4 flex-shrink-0 bg-paper-cool"
+        style={{ borderBottom: '1px solid #D9D2C0' }}
+      >
         <div className="flex-1 min-w-0">
-          <p className="text-[10px] font-sans uppercase tracking-wider text-text-muted mb-1">
-            Original
-          </p>
+          <p className="kicker mb-1.5">Original</p>
           <select
             value={leftId}
             onChange={(e) => setLeftId(e.target.value)}
-            className="w-full text-sm font-serif text-navy bg-white border border-border rounded px-2 py-1 focus:outline-none focus:border-gold/50"
+            className="w-full font-serif text-[14px] italic text-ink bg-paper-cool px-3 py-1.5 focus:outline-none focus:border-brass appearance-none cursor-pointer"
+            style={{
+              border: '1px solid #D9D2C0',
+              borderRadius: 0,
+              backgroundImage:
+                "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' stroke='%239C7A1F' stroke-width='1.2' fill='none'/></svg>\")",
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'right 12px center',
+              paddingRight: 28,
+            }}
           >
             {drafts.map((d) => (
               <option key={d.id} value={d.id}>
@@ -56,15 +100,22 @@ export default function DraftCompare({ drafts, defaultLeftId }: DraftCompareProp
             ))}
           </select>
         </div>
-        <span className="font-serif text-text-muted text-sm">vs.</span>
+        <span className="font-display italic text-ink-muted text-base">vs.</span>
         <div className="flex-1 min-w-0">
-          <p className="text-[10px] font-sans uppercase tracking-wider text-text-muted mb-1">
-            Revised
-          </p>
+          <p className="kicker mb-1.5">Revised</p>
           <select
             value={rightId}
             onChange={(e) => setRightId(e.target.value)}
-            className="w-full text-sm font-serif text-navy bg-white border border-border rounded px-2 py-1 focus:outline-none focus:border-gold/50"
+            className="w-full font-serif text-[14px] italic text-ink bg-paper-cool px-3 py-1.5 focus:outline-none focus:border-brass appearance-none cursor-pointer"
+            style={{
+              border: '1px solid #D9D2C0',
+              borderRadius: 0,
+              backgroundImage:
+                "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' stroke='%239C7A1F' stroke-width='1.2' fill='none'/></svg>\")",
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'right 12px center',
+              paddingRight: 28,
+            }}
           >
             {drafts.map((d) => (
               <option key={d.id} value={d.id}>
@@ -81,15 +132,18 @@ export default function DraftCompare({ drafts, defaultLeftId }: DraftCompareProp
           original={originalText}
           modified={modifiedText}
           language="markdown"
-          theme="vs"
+          theme="circuitus-light"
+          beforeMount={defineCircuitusTheme}
           options={{
             readOnly: true,
             renderSideBySide: true,
             wordWrap: 'on',
-            fontFamily: '"Libre Baskerville", Georgia, serif',
+            fontFamily: '"Source Serif 4", Georgia, serif',
             fontSize: 13,
             lineNumbers: 'on',
             minimap: { enabled: false },
+            renderOverviewRuler: false,
+            scrollBeyondLastLine: false,
           }}
         />
       </div>

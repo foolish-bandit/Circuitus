@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 interface StatusBarProps {
   isQuickRef?: boolean;
   shortcutHint?: string;
+  autoPilotEnabled?: boolean;
 }
 
 function useSyncMinutes(): number {
@@ -22,7 +23,11 @@ function useSyncMinutes(): number {
   return minutes;
 }
 
-export default function StatusBar({ isQuickRef = false, shortcutHint }: StatusBarProps) {
+export default function StatusBar({
+  isQuickRef = false,
+  shortcutHint,
+  autoPilotEnabled = false,
+}: StatusBarProps) {
   const minutes = useSyncMinutes();
 
   return (
@@ -40,14 +45,33 @@ export default function StatusBar({ isQuickRef = false, shortcutHint }: StatusBa
           ◆
         </span>
         <span className="font-sans text-[10px] tracking-marque uppercase text-ink-muted">
-          {isQuickRef ? 'Quick Reference' : 'Connected · Circuitus Library'}
+          {isQuickRef ? (
+            <>
+              Quick Reference
+              {shortcutHint && (
+                <span className="text-ink-muted/60 normal-case tracking-normal ml-2">
+                  · {shortcutHint} to exit
+                </span>
+              )}
+            </>
+          ) : (
+            'Connected · Circuitus Library'
+          )}
         </span>
       </div>
 
       {/* Center — sync */}
-      <span className="font-mono text-[10px] text-ink-muted/80">
-        {minutes === 0 ? 'Synced just now' : `Last synced ${minutes} min ago`}
-      </span>
+      <div className="flex items-center gap-3">
+        {autoPilotEnabled && (
+          <span className="font-mono text-[10px] text-brass-dim flex items-center gap-1">
+            <span className="inline-block w-1 h-1 bg-brass rounded-full animate-pulse" aria-hidden />
+            Auto-pilot active
+          </span>
+        )}
+        <span className="font-mono text-[10px] text-ink-muted/80">
+          {minutes === 0 ? 'Synced just now' : `Last synced ${minutes} min ago`}
+        </span>
+      </div>
 
       {/* Right — shortcut + version */}
       <div className="flex items-center gap-4">

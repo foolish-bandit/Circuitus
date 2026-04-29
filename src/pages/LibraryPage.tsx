@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
-import { BookOpen, FileText, FileType, Upload, MoreVertical, Trash2 } from 'lucide-react';
-import { getAllDocuments, deleteDocument } from '@/lib/storage';
+import { useEffect, useRef, useState } from 'react';
+import { BookOpen, FileText, FileType, Upload, MoreVertical, Trash2, Edit3 } from 'lucide-react';
+import { getAllDocuments, deleteDocument, updateDocumentTitle } from '@/lib/storage';
 import type { StoredDocument } from '@/types';
 
 interface LibraryPageProps {
@@ -36,15 +36,36 @@ const TYPE_LABEL: Record<string, string> = {
 export default function LibraryPage({ onOpenDocument, onImport, refreshKey = 0 }: LibraryPageProps) {
   const [documents, setDocuments] = useState<StoredDocument[]>([]);
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     getAllDocuments().then(setDocuments);
   }, [refreshKey]);
 
+  // Close the action menu when the user clicks anywhere else.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(null);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [menuOpen]);
+
   async function handleDelete(id: string) {
     await deleteDocument(id);
     setDocuments((prev) => prev.filter((d) => d.id !== id));
     setMenuOpen(null);
+  }
+
+  async function handleRename(doc: StoredDocument) {
+    setMenuOpen(null);
+    const next = window.prompt('Rename matter', doc.title);
+    if (!next || next === doc.title) return;
+    await updateDocumentTitle(doc.id, next);
+    setDocuments((prev) => prev.map((d) => (d.id === doc.id ? { ...d, title: next } : d)));
   }
 
   if (documents.length === 0) {
@@ -154,7 +175,8 @@ export default function LibraryPage({ onOpenDocument, onImport, refreshKey = 0 }
                       </button>
                       {menuOpen === doc.id && (
                         <div
-                          className="absolute right-0 top-full mt-1 bg-paper z-10 py-1 min-w-[140px]"
+                          ref={menuRef}
+                          className="absolute right-0 top-full mt-1 bg-paper z-10 py-1 min-w-[160px]"
                           style={{
                             border: '1px solid #D9D2C0',
                             boxShadow: '0 8px 24px -8px rgba(14,17,22,0.18)',
@@ -168,6 +190,16 @@ export default function LibraryPage({ onOpenDocument, onImport, refreshKey = 0 }
                             className="w-full text-left px-3 py-1.5 text-[11px] font-sans hover:bg-paper-warm transition-colors"
                           >
                             Open Matter
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRename(doc);
+                            }}
+                            className="w-full text-left px-3 py-1.5 text-[11px] font-sans hover:bg-paper-warm transition-colors flex items-center gap-1.5"
+                          >
+                            <Edit3 className="w-3 h-3" />
+                            Rename
                           </button>
                           <button
                             onClick={(e) => {

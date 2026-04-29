@@ -36,19 +36,34 @@ export default function DraftDiagram({ initialJson, onChange }: DraftDiagramProp
   }, []);
 
   return (
-    <div className="w-full h-full">
+    <div className="w-full h-full circuitus-excalidraw">
       <Excalidraw
         excalidrawAPI={(api) => {
           apiRef.current = api;
+        }}
+        theme="light"
+        UIOptions={{
+          welcomeScreen: false,
+          canvasActions: {
+            changeViewBackgroundColor: false,
+            saveAsImage: true,
+            saveToActiveFile: false,
+            loadScene: false,
+            export: false,
+            toggleTheme: false,
+          },
         }}
         initialData={
           initialData
             ? {
                 elements: initialData.elements as never,
-                appState: initialData.appState as never,
+                appState: {
+                  ...(initialData.appState as object),
+                  viewBackgroundColor: '#F5F1E8',
+                } as never,
                 files: initialData.files as never,
               }
-            : undefined
+            : { appState: { viewBackgroundColor: '#F5F1E8' } as never }
         }
         onChange={(elements, appState, files) => {
           if (debounceRef.current) clearTimeout(debounceRef.current);

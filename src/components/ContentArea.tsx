@@ -140,6 +140,18 @@ export default function ContentArea({
     });
   }, [chapters, rawContent]);
 
+  // --- Inject chapter anchor ids into raw HTML so left-rail TOC navigation works ---
+  // Uploaded docs already get ids via the chapter-loop render below; standin docs
+  // are rendered as a single rawContent blob and need ids attached after render.
+  useEffect(() => {
+    if (!contentRef.current || !rawContent) return;
+    const headings = contentRef.current.querySelectorAll<HTMLElement>('h2, h3');
+    headings.forEach((h, i) => {
+      h.id = `chapter-${i}`;
+      h.setAttribute('data-chapter-index', String(i));
+    });
+  }, [rawContent]);
+
   // --- Text selection toolbar ---
   const handleMouseUp = useCallback(() => {
     const selection = window.getSelection();

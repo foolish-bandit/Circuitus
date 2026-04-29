@@ -122,7 +122,7 @@ export default function LoginPage({ onLogin }: { onLogin: () => void }) {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="counsel@firm.com"
-                  className="w-full bg-transparent border-0 border-b border-rule focus:border-brass focus:outline-none px-0 py-2 font-serif text-[15px] text-ink placeholder-ink-muted/40 transition-colors"
+                  className="w-full bg-transparent border-0 border-b border-rule focus:border-brass focus:outline-none px-0 py-2 font-serif text-[15px] text-ink placeholder-ink-muted/40 transition-colors focus:shadow-[0_2px_0_0_#9C7A1F]"
                 />
               </div>
 
@@ -135,7 +135,7 @@ export default function LoginPage({ onLogin }: { onLogin: () => void }) {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder={enrolling ? 'Choose a passphrase' : 'Enter your password'}
-                  className="w-full bg-transparent border-0 border-b border-rule focus:border-brass focus:outline-none px-0 py-2 font-serif text-[15px] text-ink placeholder-ink-muted/40 transition-colors"
+                  className="w-full bg-transparent border-0 border-b border-rule focus:border-brass focus:outline-none px-0 py-2 font-serif text-[15px] text-ink placeholder-ink-muted/40 transition-colors focus:shadow-[0_2px_0_0_#9C7A1F]"
                 />
               </div>
 
@@ -147,7 +147,7 @@ export default function LoginPage({ onLogin }: { onLogin: () => void }) {
                     value={confirm}
                     onChange={(e) => setConfirm(e.target.value)}
                     placeholder="Re-enter passphrase"
-                    className="w-full bg-transparent border-0 border-b border-rule focus:border-brass focus:outline-none px-0 py-2 font-serif text-[15px] text-ink placeholder-ink-muted/40 transition-colors"
+                    className="w-full bg-transparent border-0 border-b border-rule focus:border-brass focus:outline-none px-0 py-2 font-serif text-[15px] text-ink placeholder-ink-muted/40 transition-colors focus:shadow-[0_2px_0_0_#9C7A1F]"
                   />
                 </div>
               )}

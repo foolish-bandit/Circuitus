@@ -90,18 +90,18 @@ function canMove(b: Board): boolean {
 }
 
 const TILE_BG: Record<number, string> = {
-  0: 'bg-cream',
-  2: 'bg-cream/80 text-text-main',
-  4: 'bg-cream text-text-main',
-  8: 'bg-orange-300 text-white',
-  16: 'bg-orange-400 text-white',
-  32: 'bg-orange-500 text-white',
-  64: 'bg-red-400 text-white',
-  128: 'bg-yellow-400 text-white',
-  256: 'bg-yellow-500 text-white',
-  512: 'bg-yellow-600 text-white',
-  1024: 'bg-gold text-white',
-  2048: 'bg-navy text-gold',
+  0: 'bg-paper-warm',
+  2: 'bg-paper text-ink',
+  4: 'bg-paper-cool text-ink',
+  8: 'bg-rule text-ink',
+  16: 'bg-rule-strong text-paper',
+  32: 'bg-brass-dim text-paper',
+  64: 'bg-brass text-paper',
+  128: 'bg-brass-bright text-ink',
+  256: 'bg-claret text-paper',
+  512: 'bg-claret-dark text-paper',
+  1024: 'bg-navy-light text-brass-bright',
+  2048: 'bg-navy text-brass-bright',
 };
 
 export default function Game2048() {
